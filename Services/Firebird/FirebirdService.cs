@@ -1,88 +1,72 @@
 ﻿using FirebirdSql.Data.FirebirdClient;
 
 namespace parser_cont.Services.Firebird;
-
-public class FirebirdService
+public static class FirebirdService
 {
-        private static readonly string StringConnection = "database=192.168.250.72:Cont;user=sysdba;password=Vtlysq~Bcgjkby2020;Charset=win1251;";
-        // Попытка привести к единому формату
-        public static string ReplaceCitizen(string s)
-        {
-            StringBuilder sb = new(s);
-            // Украина
-            sb.Replace("Україна", "UA");
-            sb.Replace("Украина", "UA");
-            sb.Replace("украинское", "UA");
-            sb.Replace("УКРАИНА", "UA");
-            // Россия
-            sb.Replace("Російська федерація", "RU");
-            sb.Replace("РФ", "RU");
-            sb.Replace("Российская Федерация", "RU");
-            // ЛНР
-            sb.Replace("ЛНР", "LNR");
-            sb.Replace(".ЛНР", "LNR");
-            sb.Replace("Лнр", "LNR");
-            sb.Replace("Луганская народная республика", "LNR");
-            // ДНР
-            sb.Replace("ДНР", "DNR");
-            return sb.ToString().Trim();
-        }
+    private const string StringConnection = "database=192.168.250.72:Cont;user=sysdba;password=Vtlysq~Bcgjkby2020;Charset=win1251;";
 
-        public static string ReplaceOckenka(string s)
-        {
-            StringBuilder sb = new(s);
-            //Тип предмета
-            // A - предмет, по которому нет контроля в данном семестре 
-            // B - государственный экзамен
-            // D - защита квалификационной работы 
-            // E - екзамен
-            // K - курсовая работа
-            // N - дифференцированный зачет, который не учитывается в рейтинге и при выдаче стипендии
-            // P - практика
-            // Z - зачет
-            sb.Replace("B", "государственный экзамен");
-            sb.Replace("D", "защита квалификационной работы");
-            sb.Replace("E", "экзамен");
-            sb.Replace("K", "курсовая работа");
-            sb.Replace("N", "дифференцированный зачет");
-            sb.Replace("P", "практика");
-            sb.Replace("Z", "зачет");
-            return sb.ToString().Trim();
-        }
+    // Попытка привести к единому формату
+    private static string ReplaceCitizen(string s)
+    {
+        StringBuilder sb = new(s);
+        // Украина
+        sb.Replace("Україна", "UA");
+        sb.Replace("Украина", "UA");
+        sb.Replace("украинское", "UA");
+        sb.Replace("УКРАИНА", "UA");
+        // Россия
+        sb.Replace("Російська федерація", "RU");
+        sb.Replace("РФ", "RU");
+        sb.Replace("Российская Федерация", "RU");
+        // ЛНР
+        sb.Replace("ЛНР", "LNR");
+        sb.Replace(".ЛНР", "LNR");
+        sb.Replace("Лнр", "LNR");
+        sb.Replace("Луганская народная республика", "LNR");
+        // ДНР
+        sb.Replace("ДНР", "DNR");
+        return sb.ToString().Trim();
+    }
+
+    private static string ReplaceOckenka(string s)
+    {
+        StringBuilder sb = new(s);
+        //Тип предмета
+        // A - предмет, по которому нет контроля в данном семестре 
+        // B - государственный экзамен
+        // D - защита квалификационной работы 
+        // E - екзамен
+        // K - курсовая работа
+        // N - дифференцированный зачет, который не учитывается в рейтинге и при выдаче стипендии
+        // P - практика
+        // Z - зачет
+        sb.Replace("B", "государственный экзамен");
+        sb.Replace("D", "защита квалификационной работы");
+        sb.Replace("E", "экзамен");
+        sb.Replace("K", "курсовая работа");
+        sb.Replace("N", "дифференцированный зачет");
+        sb.Replace("P", "практика");
+        sb.Replace("Z", "зачет");
+        return sb.ToString().Trim();
+    }
 
         public static async Task<List<Models.Groups>> GetGroups(int idStudent, int idFacult)
         {
-            List<Models.Groups> List = new();
-            string sql =
-                "select " +
-                " G.id," +
-                " G.NAME," +
-                " G.KURS," +
-                " G.GOD_OBR, " +
-                " ST.NAME as LEVELS ," +
-                " FR.NAME as FORM ," +
-                " FF.NAME as FKNAME," +
-                " SG.IS_BUDG," +
-                " SG.N_ZACH " +
-                " from stud_gruppa SG " +
-                " inner join gruppa G on SG.GRUP_ID = G.id " +
-                " inner join ST_LEVELS ST on ST.id = G.ST_LVL_ID " +
-                " inner join FORM_OBUCH FR on FR.id = G.FO_ID " +
-                " inner join FAKULTET FF on FF.id = G.FAK_ID " +
-                $" where SG.STUD_ID = {idStudent} and G.FAK_ID = {idFacult} and G.IS_VIP = 'F' ";
+            List<Models.Groups> list = new();
+            var sql =
+                $"select  G.id, G.NAME, G.KURS, G.GOD_OBR,  ST.NAME as LEVELS , FR.NAME as FORM , FF.NAME as FKNAME, SG.IS_BUDG, SG.N_ZACH  from stud_gruppa SG  inner join gruppa G on SG.GRUP_ID = G.id  inner join ST_LEVELS ST on ST.id = G.ST_LVL_ID  inner join FORM_OBUCH FR on FR.id = G.FO_ID  inner join FAKULTET FF on FF.id = G.FAK_ID  where SG.STUD_ID = {idStudent} and G.FAK_ID = {idFacult} and G.IS_VIP = 'F' ";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
-            await using FbTransaction transaction = await connection.BeginTransactionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sql, connection, transaction);
-            FbDataReader reader = await command.ExecuteReaderAsync();
-            int IdGroup = 0;
+            var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                IdGroup = reader.GetInt32(0);
-                List.Add(new Models.Groups
+                var idGroup = reader.GetInt32(0);
+                list.Add(new Models.Groups
                 {
-                    IdGroup = IdGroup,
+                    IdGroup = idGroup,
                     NameGroup = reader.GetString(1).Trim(),
                     Course = reader["KURS"] != DBNull.Value ? reader.GetInt16(2) : 0,
                     YearStart = reader["GOD_OBR"] != DBNull.Value ? reader.GetString(3) : "0",
@@ -91,71 +75,68 @@ public class FirebirdService
                     Faculty = reader["FKNAME"] != DBNull.Value ? reader.GetString(6) : "",
                     Basis = (string)reader["IS_BUDG"] == "T" ? "бюджет" : "контракт",
                     RecordBook = reader["N_ZACH"] != DBNull.Value ? reader.GetString(8) : "Не указано",// Зачетная книга
-                    Specialty = await GetSpesialties(IdGroup)
+                    Specialty = await GetSpesialties(idGroup)
                 });
             }
 
             await reader.CloseAsync();
 
-            return List;
+            return list;
         }
     public static async Task<List<Students>> GetStudentsAll()
     {
-        List<Students> List = new();
+        List<Students> list = new();
 
-        string sqlGrid =
-            " select " +
-            " distinct " +
-            " S.id," + //0
-            " S.FAMIL," +//1
-            " S.NAME," +//2
-            " S.OTCH," +//3
-            " S.D_BIRTH," +//4
-            " S.IS_MALE," +//5
-            " S.CITIZEN," +//6
-            " S.IND_KOD," +//7
-            " S.TEL_DOM," +//8
-            " S.TEL_MOB," +//9
-            " S.TEL_THIRD," +//10
-            " S.ADRES_PR," +//11
-            " S.ADRES_F," +//12
-            " S.SER_PASP," +//13
-            " S.N_PASP," +//14
-            " S.KEM_VIDAN_PASP," + //15
-            " S.D_VIDACHI_PASP," +//16
-            " S.TIP_DOC," +//17
-            " S.IS_OBSHAGA," +//18
-            " S.IS_TREB_OBSH," +//19
-                                //  " S.ABID," +//20
-                                //   " DOP.OBR_ZAV," +//20
-                                //   " SG.GRUP_ID as GroupId, " +
-                                //   " G.NAME as GROUPNAME, " +
-                                //   " SG.god_post," +
-                                //   " SG.IS_BUDG," +
-                                //   " SG.N_ZACH, " +
-            " S.MESTO_ROGD ," + //21
-            " G.FAK_ID " + //22
-            " from STUDENT S " +
-            " inner join stud_gruppa SG on SG.stud_id = S.id " +
-            " inner join gruppa G on SG.GRUP_ID = G.id " +
-            $" where G.IS_VIP = 'F' and G.fak_id in (1, 3, 4, 5, 7, 8 , 13 , 36)" +
-            " order by S.FAMIL asc";
+        const string sqlGrid = " select " +
+                               " distinct " +
+                               " S.id," + //0
+                               " S.FAMIL," +//1
+                               " S.NAME," +//2
+                               " S.OTCH," +//3
+                               " S.D_BIRTH," +//4
+                               " S.IS_MALE," +//5
+                               " S.CITIZEN," +//6
+                               " S.IND_KOD," +//7
+                               " S.TEL_DOM," +//8
+                               " S.TEL_MOB," +//9
+                               " S.TEL_THIRD," +//10
+                               " S.ADRES_PR," +//11
+                               " S.ADRES_F," +//12
+                               " S.SER_PASP," +//13
+                               " S.N_PASP," +//14
+                               " S.KEM_VIDAN_PASP," + //15
+                               " S.D_VIDACHI_PASP," +//16
+                               " S.TIP_DOC," +//17
+                               " S.IS_OBSHAGA," +//18
+                               " S.IS_TREB_OBSH," +//19
+                               //  " S.ABID," +//20
+                               //   " DOP.OBR_ZAV," +//20
+                               //   " SG.GRUP_ID as GroupId, " +
+                               //   " G.NAME as GROUPNAME, " +
+                               //   " SG.god_post," +
+                               //   " SG.IS_BUDG," +
+                               //   " SG.N_ZACH, " +
+                               " S.MESTO_ROGD ," + //21
+                               " G.FAK_ID " + //22
+                               " from STUDENT S " +
+                               " inner join stud_gruppa SG on SG.stud_id = S.id " +
+                               " inner join gruppa G on SG.GRUP_ID = G.id " +
+                               $" where G.IS_VIP = 'F' and G.fak_id in (1, 3, 4, 5, 7, 8 , 13 , 36)" +
+                               " order by S.FAMIL asc";
 
         await using FbConnection connection = new(StringConnection);
         connection.Open();
-        await using FbTransaction transaction = await connection.BeginTransactionAsync();
+        await using var transaction = await connection.BeginTransactionAsync();
         await using FbCommand command = new(sqlGrid, connection, transaction);
-        FbDataReader reader = await command.ExecuteReaderAsync();
-        int IdStudent = 0;
-        int IdFaculty = 0;
+        var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            IdStudent = reader.GetInt32(0);
-            IdFaculty = reader.GetInt32(21);
+            var idStudent = reader.GetInt32(0);
+            var idFaculty = reader.GetInt32(21);
 
-            List.Add(new Students
+            list.Add(new Students
             {
-                IdStudent = IdStudent,
+                IdStudent = idStudent,
                 FirstName = reader.GetString(2),
                 MiddleName = reader.GetString(3),
                 LastName = reader.GetString(1),
@@ -178,23 +159,23 @@ public class FirebirdService
                 BirthPlace = reader["MESTO_ROGD"] != DBNull.Value ? reader.GetString(20) : "Не указано",
 
                 // Записываем в группы
-                Groups = await GetGroups(IdStudent, IdFaculty),
+                Groups = await GetGroups(idStudent, idFaculty),
                 // 
-                OrganizationEducation = await GetEducation(IdStudent),
+                OrganizationEducation = await GetEducation(idStudent),
                 // Родители
-                Relatives = await GetRelatives(IdStudent)
+                Relatives = await GetRelatives(idStudent)
 
             });
         }
         await reader.CloseAsync();
 
-        return List;
+        return list;
     }
     public static async Task<List<Students>> GetStudents(string idFak)
         {
-            List<Students> List = new();
+            List<Students> list = new();
 
-            string sqlGrid =
+            var sqlGrid =
                 " select " +
                 " distinct " +
                 " S.id," + //0
@@ -233,17 +214,16 @@ public class FirebirdService
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
-            await using FbTransaction transaction = await connection.BeginTransactionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sqlGrid, connection, transaction);
-            FbDataReader reader = await command.ExecuteReaderAsync();
-            int IdStudent = 0;
+            var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                IdStudent = reader.GetInt32(0);
+                var idStudent = reader.GetInt32(0);
 
-                List.Add(new Students
+                list.Add(new Students
                 {
-                    IdStudent = IdStudent,
+                    IdStudent = idStudent,
                     FirstName = reader.GetString(2),
                     MiddleName = reader.GetString(3),
                     LastName = reader.GetString(1),
@@ -266,32 +246,32 @@ public class FirebirdService
                     BirthPlace = reader["MESTO_ROGD"] != DBNull.Value ? reader.GetString(20) : "Не указано",
 
                     // Записываем в группы
-                    Groups = await GetGroups(IdStudent, int.Parse(idFak)),
+                    Groups = await GetGroups(idStudent, int.Parse(idFak)),
                     // 
-                    OrganizationEducation = await GetEducation(IdStudent),
+                    OrganizationEducation = await GetEducation(idStudent),
                     // Родители
-                    Relatives = await GetRelatives(IdStudent)
+                    Relatives = await GetRelatives(idStudent)
 
                 });
             }
             await reader.CloseAsync();
 
-            return List;
+            return list;
         }
 
         public static async Task<List<OrganizationEducation>> GetEducation(int idStudent)
         {
-            List<OrganizationEducation> List = new();
-            string sqlGrid = "select OBR_ZAV from DOP_OBUCH  where STUD_ID = " + idStudent;
+            List<OrganizationEducation> list = new();
+            var sqlGrid = $"select OBR_ZAV from DOP_OBUCH  where STUD_ID = {idStudent}";
             await using FbConnection connection = new(StringConnection);
             connection.Open();
-            await using FbTransaction transaction = await connection.BeginTransactionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sqlGrid, connection, transaction);
-            FbDataReader reader = await command.ExecuteReaderAsync();
+            var reader = await command.ExecuteReaderAsync();
 
             while (await reader.ReadAsync())
             {
-                List.Add(new OrganizationEducation
+                list.Add(new OrganizationEducation
                 {
                     Name = reader.GetString(0),
                 });
@@ -299,32 +279,24 @@ public class FirebirdService
             }
             await reader.CloseAsync();
 
-            return List;
+            return list;
         }
 
         public static async Task<List<Relatives>> GetRelatives(int idStudent)
         {
-            List<Relatives> List = new();
-            string sql =
-                " select" +
-                " ROD.FIO," +
-                " TYP.NAME," +
-                " ROD.ADRES," +
-                " ROD.TEL_DOM," +
-                " ROD.TEL_RAB " +
-                " from RODITELI ROD " +
-                " left join TYP_RODSTVO TYP on TYP.ID = ROD.RODSTVO_ID " +
-                " where ROD.STUD_ID = " + idStudent;
+            List<Relatives> list = new();
+            var sql =
+                $" select ROD.FIO, TYP.NAME, ROD.ADRES, ROD.TEL_DOM, ROD.TEL_RAB  from RODITELI ROD  left join TYP_RODSTVO TYP on TYP.ID = ROD.RODSTVO_ID  where ROD.STUD_ID = {idStudent}";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
-            await using FbTransaction transaction = await connection.BeginTransactionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sql, connection, transaction);
-            FbDataReader reader = await command.ExecuteReaderAsync();
+            var reader = await command.ExecuteReaderAsync();
 
             while (await reader.ReadAsync())
             {
-                List.Add(new Relatives
+                list.Add(new Relatives
                 {
                     FullName = reader["FIO"] != DBNull.Value ? reader.GetString(0) : "Не указано",
                     Type = reader["NAME"] != DBNull.Value ? reader.GetString(1) : "Не указано",
@@ -335,32 +307,25 @@ public class FirebirdService
             }
             await reader.CloseAsync();
 
-            return List;
+            return list;
         }
 
 
 
     public static async Task<List<Spesialty>> GetSpesialties(int idGroup)
     {
-            List<Spesialty> List = new();
-            string sql =
-                "select " +
-                " S.id," +
-                " S.NAME," +
-                " S.NICK," +
-                " S.MIN_ID " +
-                " from SPECIALNOST S " +
-                 "inner join gruppa G on S.id = G.SPEC_ID " +
-                $" where G.id = {idGroup}";
+            List<Spesialty> list = new();
+            var sql =
+                $"select  S.id, S.NAME, S.NICK, S.MIN_ID  from SPECIALNOST S inner join gruppa G on S.id = G.SPEC_ID  where G.id = {idGroup}";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
-            await using FbTransaction transaction = await connection.BeginTransactionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sql, connection, transaction);
-            FbDataReader reader = await command.ExecuteReaderAsync();
+            var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                List.Add(new Spesialty
+                list.Add(new Spesialty
                 {
                     IdSpecialty = reader.GetInt32(0),
                     Name = reader["NAME"] != DBNull.Value ? reader.GetString(1).Trim().ToLower() : "не указано",
@@ -372,7 +337,7 @@ public class FirebirdService
 
             await reader.CloseAsync();
 
-            return List;
+            return list;
     }
 
 }
