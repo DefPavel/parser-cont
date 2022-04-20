@@ -1,0 +1,12 @@
+﻿version: '3'
+
+services:
+  webapi:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: asp-web
+    ports:
+      - "80:7000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development

@@ -50,39 +50,39 @@ public static class FirebirdService
         return sb.ToString().Trim();
     }
 
-        public static async Task<List<Models.Groups>> GetGroups(int idStudent, int idFacult)
+    public static async Task<List<Models.Groups>> GetGroups(int idStudent, int idFacult)
+    {
+        List<Models.Groups> list = new();
+        var sql =
+            $"select  G.id, G.NAME, G.KURS, G.GOD_OBR,  ST.NAME as LEVELS , FR.NAME as FORM , FF.NAME as FKNAME, SG.IS_BUDG, SG.N_ZACH  from stud_gruppa SG  inner join gruppa G on SG.GRUP_ID = G.id  inner join ST_LEVELS ST on ST.id = G.ST_LVL_ID  inner join FORM_OBUCH FR on FR.id = G.FO_ID  inner join FAKULTET FF on FF.id = G.FAK_ID  where SG.STUD_ID = {idStudent} and G.FAK_ID = {idFacult} and G.IS_VIP = 'F' ";
+
+        await using FbConnection connection = new(StringConnection);
+        connection.Open();
+        await using var transaction = await connection.BeginTransactionAsync();
+        await using FbCommand command = new(sql, connection, transaction);
+        var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
         {
-            List<Models.Groups> list = new();
-            var sql =
-                $"select  G.id, G.NAME, G.KURS, G.GOD_OBR,  ST.NAME as LEVELS , FR.NAME as FORM , FF.NAME as FKNAME, SG.IS_BUDG, SG.N_ZACH  from stud_gruppa SG  inner join gruppa G on SG.GRUP_ID = G.id  inner join ST_LEVELS ST on ST.id = G.ST_LVL_ID  inner join FORM_OBUCH FR on FR.id = G.FO_ID  inner join FAKULTET FF on FF.id = G.FAK_ID  where SG.STUD_ID = {idStudent} and G.FAK_ID = {idFacult} and G.IS_VIP = 'F' ";
-
-            await using FbConnection connection = new(StringConnection);
-            connection.Open();
-            await using var transaction = await connection.BeginTransactionAsync();
-            await using FbCommand command = new(sql, connection, transaction);
-            var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            var idGroup = reader.GetInt32(0);
+            list.Add(new Models.Groups
             {
-                var idGroup = reader.GetInt32(0);
-                list.Add(new Models.Groups
-                {
-                    IdGroup = idGroup,
-                    NameGroup = reader.GetString(1).Trim(),
-                    Course = reader["KURS"] != DBNull.Value ? reader.GetInt16(2) : 0,
-                    YearStart = reader["GOD_OBR"] != DBNull.Value ? reader.GetString(3) : "0",
-                    Level = reader["LEVELS"] != DBNull.Value ? reader.GetString(4) : "",
-                    Form = reader["FORM"] != DBNull.Value ? reader.GetString(5) : "",
-                    Faculty = reader["FKNAME"] != DBNull.Value ? reader.GetString(6) : "",
-                    Basis = (string)reader["IS_BUDG"] == "T" ? "бюджет" : "контракт",
-                    RecordBook = reader["N_ZACH"] != DBNull.Value ? reader.GetString(8) : "Не указано",// Зачетная книга
-                    Specialty = await GetSpesialties(idGroup)
-                });
-            }
-
-            await reader.CloseAsync();
-
-            return list;
+                IdGroup = idGroup,
+                NameGroup = reader.GetString(1).Trim(),
+                Course = reader["KURS"] != DBNull.Value ? reader.GetInt16(2) : 0,
+                YearStart = reader["GOD_OBR"] != DBNull.Value ? reader.GetString(3) : "0",
+                Level = reader["LEVELS"] != DBNull.Value ? reader.GetString(4) : "",
+                Form = reader["FORM"] != DBNull.Value ? reader.GetString(5) : "",
+                Faculty = reader["FKNAME"] != DBNull.Value ? reader.GetString(6) : "",
+                Basis = (string)reader["IS_BUDG"] == "T" ? "бюджет" : "контракт",
+                RecordBook = reader["N_ZACH"] != DBNull.Value ? reader.GetString(8) : "Не указано",// Зачетная книга
+                Specialty = await GetSpesialties(idGroup)
+            });
         }
+
+        await reader.CloseAsync();
+
+        return list;
+    }
     public static async Task<List<Students>> GetStudentsAll()
     {
         List<Students> list = new();
