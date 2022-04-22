@@ -50,6 +50,58 @@ public static class FirebirdService
         return sb.ToString().Trim();
     }
 
+    private static string ReplaceLevel(string s)
+    {
+        StringBuilder sb = new(s);
+        sb.Replace("Магистр", "Магистратура");
+        sb.Replace("Бакалавр", "Бакалавриат");
+        return sb.ToString().Trim();
+    }
+    private static string FirstCharToUpper(this string input) => input switch
+    {
+        null => throw new ArgumentNullException(nameof(input)),
+        "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
+        _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
+    };
+
+    public static async Task<List<Specialtys>> GetNewSpecialty()
+    {
+        List<Specialtys> list = new();
+        const string sql = " select distinct(s.name) as specialty ,s.id, s.nick,   s.min_id , s.prof_podg  , sl.name as st_level ,fo.name as fo_name, fak.name as fak_name" +
+                           " from specialnost s"
+                           + " inner join gruppa g on g.spec_id = s.id"
+                           + " inner join ST_LEVELS sl on sl.id = g.st_lvl_id"
+                           + " inner join form_obuch fo on fo.id = g.fo_id"
+                           + " inner join fakultet fak on fak.id = g.fak_id"
+                           + " where g.is_vip = 'F' and fak.id NOT IN (9,15,2,24,19,11,25, 18) ";
+        
+        await using FbConnection connection = new(StringConnection);
+        connection.Open();
+        await using var transaction = await connection.BeginTransactionAsync();
+        await using FbCommand command = new(sql, connection, transaction);
+        var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            list.Add(new Specialtys
+                {
+                    IdSpecialty = reader.GetInt32(1),
+                    NameSpecialty = reader.GetString(0).ToLower().Trim(),
+                    ShortSpecialty = reader["nick"] != DBNull.Value ? reader.GetString(2).ToLower().Trim() : "Не указано",
+                    MinId = reader["min_id"] != DBNull.Value  && string.IsNullOrWhiteSpace(reader.GetString(3)) ? reader.GetString(3).ToLower().Trim() : "Не указано",
+                    Profile = reader["prof_podg"] != DBNull.Value ? reader.GetString(4).ToLower().Trim() : null,
+                    Level = ReplaceLevel(FirstCharToUpper(reader.GetString(5).Trim().ToLower())),
+                    Form = FirstCharToUpper(reader.GetString(6).Trim().ToLower()),
+                    NameDepartment = reader.GetString(7).Trim()
+                    
+                }
+            );
+            
+        }
+        await reader.CloseAsync();
+
+        return list;
+    }
+
     public static async Task<List<Models.Groups>> GetGroups(int idStudent, int idFacult)
     {
         List<Models.Groups> list = new();

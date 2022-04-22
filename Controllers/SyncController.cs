@@ -50,5 +50,19 @@ public class SyncController : ControllerBase
            ? new BadRequestResult()
            : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/students", token, globalArray);
     }
+    [Route("/[action]")]
+    [HttpPost]
+    public async Task<ActionResult<ArrayStudents>> AllSpecialty(string token)
+    {
+        using ClientApi client = new(Hosting);
+        ArrayStudents globalArray = new()
+        {
+            ArraySpecialty = await FirebirdService.GetNewSpecialty()
+        };
+        // Если запрос пустой
+        return globalArray.ArraySpecialty.Count == 0
+            ? new BadRequestResult()
+            : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/specialty", token, globalArray);
+    }
 }
 
