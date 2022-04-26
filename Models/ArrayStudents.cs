@@ -1,5 +1,5 @@
 ﻿namespace parser_cont.Models;
-public class ArrayStudents
+public class ArrayStudents : Response
 {
     [JsonPropertyName("studentArr")]
     public List<Students> ArrayStudent { get; set; } = new();

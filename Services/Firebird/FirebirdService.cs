@@ -64,16 +64,87 @@ public static class FirebirdService
         _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
     };
 
+    public static async Task<List<StudentOcenka>> GetStudentMarks(int fakId)
+    {
+        List<StudentOcenka> List = new();
+        string sql = " select s.id " +
+            " from student s " +
+            " inner join stud_gruppa sg on s.id = sg.stud_id " +
+            " inner join gruppa g on g.id = sg.grup_id " +
+            " where g.is_vip = 'f' and g.fak_id = " + fakId;
+        await using FbConnection connection = new(StringConnection);
+        connection.Open();
+        await using FbTransaction transaction = await connection.BeginTransactionAsync();
+        await using FbCommand command = new(sql, connection, transaction);
+        FbDataReader reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            List.Add(new StudentOcenka
+            {
+                Id = reader.GetInt32(0),
+                Plans = await GetPlan(reader.GetInt32(0))
+            });
+
+        }
+        await reader.CloseAsync();
+
+        return List;
+    }
+    public static async Task<List<Plan>> GetPlan(int idStudent)
+    {
+        List<Plan> List = new();
+        string sql =
+            "select distinct up.name, up.semestr , up.typ , o.ball, o.ocenka, o.ocenka_ects " +
+            "from student s " +
+            "inner join stud_gruppa sg on s.id = sg.stud_id " +
+            "inner join ocenky o on o.stud_id = s.id " +
+            "inner join uch_plan up on up.id = o.up_id " +
+            "where s.id = " + idStudent;
+
+        await using FbConnection connection = new(StringConnection);
+        connection.Open();
+        await using FbTransaction transaction = await connection.BeginTransactionAsync();
+        await using FbCommand command = new(sql, connection, transaction);
+        FbDataReader reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            string ocenka = string.Empty;
+
+            if (reader.GetString(2).Trim() == "Z")
+            {
+                if (reader.GetString(4) == "2" || reader.GetString(4) == "0")
+                    ocenka = "0";
+                else
+                    ocenka = "1";
+            }
+            else
+                ocenka = reader.GetString(4);
+
+            List.Add(new Plan
+            {
+                SubjectName = reader["name"] != DBNull.Value ? reader.GetString(0).Trim() : "не указано",
+                Semester = reader["semestr"] != DBNull.Value ? reader.GetString(1) : "0",
+                FormControl = ReplaceOckenka(reader.GetString(2)),
+                Ball_100 = reader["ball"] != DBNull.Value ? reader.GetInt32(3) : 0,
+                Ball_5 = ocenka,
+                Ball_ECTS = reader.GetString(5).Trim(),
+            });
+        }
+
+        await reader.CloseAsync();
+
+        return List;
+    }
     public static async Task<List<Specialtys>> GetNewSpecialty()
     {
         List<Specialtys> list = new();
-        const string sql = " select distinct(s.name) as specialty ,s.id, s.nick,   s.min_id , s.prof_podg  , sl.name as st_level ,fo.name as fo_name, fak.name as fak_name" +
+        const string sql = " select s.name as specialty ,s.id, s.nick,   s.min_id , s.prof_podg  , sl.name as st_level ,fo.name as fo_name, fak.name as fak_name" +
                            " from specialnost s"
                            + " inner join gruppa g on g.spec_id = s.id"
                            + " inner join ST_LEVELS sl on sl.id = g.st_lvl_id"
                            + " inner join form_obuch fo on fo.id = g.fo_id"
                            + " inner join fakultet fak on fak.id = g.fak_id"
-                           + " where g.is_vip = 'F' and fak.id NOT IN (9,15,2,24,19,11,25, 18) ";
+                           + " where g.is_vip = 'F' and fak.id NOT IN (9,15,2,24,19,11,25,30, 18) ";
         
         await using FbConnection connection = new(StringConnection);
         connection.Open();
@@ -83,18 +154,19 @@ public static class FirebirdService
         while (await reader.ReadAsync())
         {
             list.Add(new Specialtys
-                {
-                    IdSpecialty = reader.GetInt32(1),
-                    NameSpecialty = reader.GetString(0).ToLower().Trim(),
-                    ShortSpecialty = reader["nick"] != DBNull.Value ? reader.GetString(2).ToLower().Trim() : "Не указано",
-                    MinId = reader["min_id"] != DBNull.Value  && string.IsNullOrWhiteSpace(reader.GetString(3)) ? reader.GetString(3).ToLower().Trim() : "Не указано",
-                    Profile = reader["prof_podg"] != DBNull.Value ? reader.GetString(4).ToLower().Trim() : null,
-                    Level = ReplaceLevel(FirstCharToUpper(reader.GetString(5).Trim().ToLower())),
-                    Form = FirstCharToUpper(reader.GetString(6).Trim().ToLower()),
-                    NameDepartment = reader.GetString(7).Trim()
-                    
-                }
-            );
+            {
+                IdSpecialty = reader.GetInt32(1),
+                NameSpecialty = reader.GetString(0).ToLower().Trim(),
+                ShortSpecialty = reader["nick"] != DBNull.Value ? reader.GetString(2).ToLower().Trim() : "Не указано",
+                MinId = reader["min_id"] != DBNull.Value && string.IsNullOrWhiteSpace(reader.GetString(3)) ? reader.GetString(3).ToLower().Trim() : "Не указано",
+                Profile = reader["prof_podg"] != DBNull.Value ? reader.GetString(4).ToLower().Trim() : null,
+                Level = ReplaceLevel(FirstCharToUpper(reader.GetString(5).Trim().ToLower())),
+                Form = FirstCharToUpper(reader.GetString(6).Trim().ToLower()),
+                NameDepartment = reader.GetString(7).Trim() == "Колледж Луганского государственного педагогического университета"
+                    ? "ОП «Многопрофильный педагогический колледж ЛГПУ»"
+                    : reader.GetString(7).Trim()
+
+            });
             
         }
         await reader.CloseAsync();
@@ -173,7 +245,7 @@ public static class FirebirdService
                                " from STUDENT S " +
                                " inner join stud_gruppa SG on SG.stud_id = S.id " +
                                " inner join gruppa G on SG.GRUP_ID = G.id " +
-                               $" where G.IS_VIP = 'F' and G.fak_id in (1, 3, 4, 5, 7, 8 , 13 , 36)" +
+                               $" where G.IS_VIP = 'F' and G.fak_id in (1, 3, 4, 5, 7, 8 , 13 ,28, 36)" +
                                " order by S.FAMIL asc";
 
         await using FbConnection connection = new(StringConnection);
@@ -368,7 +440,8 @@ public static class FirebirdService
     {
             List<Spesialty> list = new();
             var sql =
-                $"select  S.id, S.NAME, S.NICK, S.MIN_ID  from SPECIALNOST S inner join gruppa G on S.id = G.SPEC_ID  where G.id = {idGroup}";
+                $"select  S.id, S.NAME, S.NICK, S.MIN_ID  from SPECIALNOST S inner join gruppa G on S.id = G.SPEC_ID  where G.id = {idGroup} and G.IS_VIP = 'F'";
+
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();

@@ -36,6 +36,21 @@ public class SyncController : ControllerBase
            : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/students", token, globalArray);
     }
 
+
+    [Route("/[action]")]
+    [HttpPost]
+    public async Task<ActionResult<ArrayStudents>> StudentMarksByIdDepartment(string token, int idFaculty)
+    {
+        using ClientApi client = new(Hosting);
+
+        List<StudentOcenka> StudentOcenka = await FirebirdService.GetStudentMarks(idFaculty);
+
+        // Если запрос пустой
+        return StudentOcenka.Count == 0
+           ? new BadRequestResult()
+           : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/marksToGroup", token, StudentOcenka);
+    }
+
     [Route("/[action]")]
     [HttpPost]
     public async Task<ActionResult<ArrayStudents>> StudentByAllDepartment(string token)
@@ -45,6 +60,16 @@ public class SyncController : ControllerBase
         {
             ArrayStudent = await FirebirdService.GetStudentsAll()
         };
+        using FileStream createStream = System.IO.File.Create(@"students.json");
+
+        // Сериализация в UTF-8
+        Console.OutputEncoding = Encoding.UTF8;
+        JsonSerializerOptions options = new()
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true
+        };
+        await JsonSerializer.SerializeAsync(createStream, globalArray, options);
         // Если запрос пустой
         return globalArray.ArrayStudent.Count == 0
            ? new BadRequestResult()

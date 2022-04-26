@@ -18,7 +18,7 @@ public class Students
     public string SerialPassport { get; internal set; } = string.Empty;
     public string NumberPassport { get; internal set; } = string.Empty;
     public string OrganizationPassport { get; internal set; } = string.Empty;
-    public string DatePassport { get; internal set; } = string.Empty;
+    public string DatePassport { get; internal set; } = new DateTime(1900,1,1).ToShortDateString();
     public string TypeDocument { get; internal set; } = string.Empty;
     public bool IsHostel { get; internal set; } = false;
     public bool NeedHostel { get; internal set; } = false;
