@@ -54,18 +54,26 @@ public class ClientApi : IDisposable
     }
 
 
-    public async Task<TResult> GetAsync<TResult>(string url) where TResult : class, new()
+    public async Task<TResult> GetAsyncByToken<TResult>(string url, string token) where TResult : class, new()
     {
-        var strResponse = await GetAsync(url);
-
-        return JsonSerializer.Deserialize<TResult>(strResponse)
-            ?? throw new NullReferenceException();
+        var strResponse = await GetAsyncByToken(url, token);
+        return JsonSerializer.Deserialize<TResult>(strResponse) ?? throw new NullReferenceException();
     }
 
+    public async Task<string> GetAsyncByToken(string url, string token)
+    {
+        EnsureHttpClientCreated();
+        if (!_httpClient.DefaultRequestHeaders.Contains("auth-token"))
+        {
+            _httpClient.DefaultRequestHeaders.Add("auth-token", token);
+        }
+        using var response = await _httpClient.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync();
+    }
     public async Task<string> GetAsync(string url)
     {
         EnsureHttpClientCreated();
-
         using var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync();

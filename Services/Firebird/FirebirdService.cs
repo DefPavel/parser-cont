@@ -1,11 +1,14 @@
 ﻿using FirebirdSql.Data.FirebirdClient;
+using parser_cont.Models.Education;
 
 namespace parser_cont.Services.Firebird;
 public static class FirebirdService
 {
     private const string StringConnection = "database=192.168.250.72:Cont;user=sysdba;password=Vtlysq~Bcgjkby2020;Charset=win1251;";
+    
+    #region Main Service
 
-    // Попытка привести к единому формату
+     // Попытка привести к единому формату
     private static string ReplaceCitizen(string s)
     {
         StringBuilder sb = new(s);
@@ -27,7 +30,6 @@ public static class FirebirdService
         sb.Replace("ДНР", "DNR");
         return sb.ToString().Trim();
     }
-
     private static string ReplaceOckenka(string s)
     {
         StringBuilder sb = new(s);
@@ -49,7 +51,6 @@ public static class FirebirdService
         sb.Replace("Z", "зачет");
         return sb.ToString().Trim();
     }
-
     private static string ReplaceLevel(string s)
     {
         StringBuilder sb = new(s);
@@ -63,23 +64,19 @@ public static class FirebirdService
         "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
         _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
     };
-
-    public static async Task<List<StudentOcenka>> GetStudentMarks(int fakId)
+    public static async Task<List<StudentOcenka>> GetStudentMarks(int groupId)
     {
-        List<StudentOcenka> List = new();
-        string sql = " select s.id " +
-            " from student s " +
-            " inner join stud_gruppa sg on s.id = sg.stud_id " +
-            " inner join gruppa g on g.id = sg.grup_id " +
-            " where g.is_vip = 'f' and g.fak_id = " + fakId;
+        List<StudentOcenka> list = new();
+        var sql =
+            $" select s.id from student s inner join stud_gruppa sg on s.id = sg.stud_id  inner join gruppa g on g.id = sg.grup_id  where g.is_vip = 'F' and g.id = {groupId}";
         await using FbConnection connection = new(StringConnection);
         connection.Open();
-        await using FbTransaction transaction = await connection.BeginTransactionAsync();
+        await using var transaction = await connection.BeginTransactionAsync();
         await using FbCommand command = new(sql, connection, transaction);
-        FbDataReader reader = await command.ExecuteReaderAsync();
+        var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            List.Add(new StudentOcenka
+            list.Add(new StudentOcenka
             {
                 Id = reader.GetInt32(0),
                 Plans = await GetPlan(reader.GetInt32(0))
@@ -88,12 +85,12 @@ public static class FirebirdService
         }
         await reader.CloseAsync();
 
-        return List;
+        return list;
     }
     public static async Task<List<Plan>> GetPlan(int idStudent)
     {
-        List<Plan> List = new();
-        string sql =
+        List<Plan> list = new();
+        var sql =
             "select distinct up.name, up.semestr , up.typ , o.ball, o.ocenka, o.ocenka_ects " +
             "from student s " +
             "inner join stud_gruppa sg on s.id = sg.stud_id " +
@@ -103,13 +100,12 @@ public static class FirebirdService
 
         await using FbConnection connection = new(StringConnection);
         connection.Open();
-        await using FbTransaction transaction = await connection.BeginTransactionAsync();
+        await using var transaction = await connection.BeginTransactionAsync();
         await using FbCommand command = new(sql, connection, transaction);
-        FbDataReader reader = await command.ExecuteReaderAsync();
+        var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            string ocenka = string.Empty;
-
+            string ocenka;
             if (reader.GetString(2).Trim() == "Z")
             {
                 if (reader.GetString(4) == "2" || reader.GetString(4) == "0")
@@ -120,7 +116,7 @@ public static class FirebirdService
             else
                 ocenka = reader.GetString(4);
 
-            List.Add(new Plan
+            list.Add(new Plan
             {
                 SubjectName = reader["name"] != DBNull.Value ? reader.GetString(0).Trim() : "не указано",
                 Semester = reader["semestr"] != DBNull.Value ? reader.GetString(1) : "0",
@@ -133,7 +129,7 @@ public static class FirebirdService
 
         await reader.CloseAsync();
 
-        return List;
+        return list;
     }
     public static async Task<List<Specialtys>> GetNewSpecialty()
     {
@@ -173,12 +169,14 @@ public static class FirebirdService
 
         return list;
     }
-
-    public static async Task<List<Models.Groups>> GetGroups(int idStudent, int idFacult)
+    public static async Task<List<Groups>> GetGroups(int idStudent, int idFacult)
     {
-        List<Models.Groups> list = new();
+        List<Groups> list = new();
         var sql =
-            $"select  G.id, G.NAME, G.KURS, G.GOD_OBR,  ST.NAME as LEVELS , FR.NAME as FORM , FF.NAME as FKNAME, SG.IS_BUDG, SG.N_ZACH  from stud_gruppa SG  inner join gruppa G on SG.GRUP_ID = G.id  inner join ST_LEVELS ST on ST.id = G.ST_LVL_ID  inner join FORM_OBUCH FR on FR.id = G.FO_ID  inner join FAKULTET FF on FF.id = G.FAK_ID  where SG.STUD_ID = {idStudent} and G.FAK_ID = {idFacult} and G.IS_VIP = 'F' ";
+            $"select  G.id, G.NAME, G.KURS, G.GOD_OBR,  ST.NAME as LEVELS , FR.NAME as FORM , FF.NAME as FKNAME, SG.IS_BUDG, SG.N_ZACH  from stud_gruppa SG  inner join gruppa G on SG.GRUP_ID = G.id  inner join ST_LEVELS ST on ST.id = G.ST_LVL_ID  inner join FORM_OBUCH FR on FR.id = G.FO_ID  inner join FAKULTET FF on FF.id = G.FAK_ID  " +
+            $" where SG.STUD_ID = {idStudent} " +
+            $" and G.FAK_ID = {idFacult}" +
+            $" and G.IS_VIP = 'F' ";
 
         await using FbConnection connection = new(StringConnection);
         connection.Open();
@@ -188,7 +186,7 @@ public static class FirebirdService
         while (await reader.ReadAsync())
         {
             var idGroup = reader.GetInt32(0);
-            list.Add(new Models.Groups
+            list.Add(new Groups
             {
                 IdGroup = idGroup,
                 NameGroup = reader.GetString(1).Trim(),
@@ -382,8 +380,7 @@ public static class FirebirdService
 
             return list;
         }
-
-        public static async Task<List<OrganizationEducation>> GetEducation(int idStudent)
+    public static async Task<List<OrganizationEducation>> GetEducation(int idStudent)
         {
             List<OrganizationEducation> list = new();
             var sqlGrid = $"select OBR_ZAV from DOP_OBUCH  where STUD_ID = {idStudent}";
@@ -405,8 +402,7 @@ public static class FirebirdService
 
             return list;
         }
-
-        public static async Task<List<Relatives>> GetRelatives(int idStudent)
+    public static async Task<List<Relatives>> GetRelatives(int idStudent)
         {
             List<Relatives> list = new();
             var sql =
@@ -433,9 +429,6 @@ public static class FirebirdService
 
             return list;
         }
-
-
-
     public static async Task<List<Spesialty>> GetSpesialties(int idGroup)
     {
             List<Spesialty> list = new();
@@ -465,5 +458,7 @@ public static class FirebirdService
             return list;
     }
 
+    #endregion
+    
 }
 

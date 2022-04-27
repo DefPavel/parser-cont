@@ -1,4 +1,4 @@
-﻿namespace parser_cont.Models;
+﻿namespace parser_cont.Models.Education;
 public class Relatives
 {
     public string FullName { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-﻿# Old database parser(Cont)
+﻿# Old database parser(Education and Personnel)
 ### Build Application:
 ``dotnet build``
 ### Run Application in NET6:

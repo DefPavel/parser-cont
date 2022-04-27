@@ -1,4 +1,4 @@
-﻿namespace parser_cont.Models;
+﻿namespace parser_cont.Models.Education;
 public class Groups
 {
     public int IdGroup { get; internal set; } = 0;
