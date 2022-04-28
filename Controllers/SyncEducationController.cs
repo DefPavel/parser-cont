@@ -1,7 +1,4 @@
-﻿using parser_cont.Models.Education;
-using System.Text.Encodings.Web;
-
-namespace parser_cont.Controllers;
+﻿namespace parser_cont.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -38,16 +35,6 @@ public class SyncEducationController : ControllerBase
         {
             item.ArrayStudents = await FirebirdService.GetStudentMarks(item.IdCont);
         }
-       /* await using var createStream = System.IO.File.Create(@"marks.json");
-        JsonSerializerOptions options = new()
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            WriteIndented = true
-        };
-        await JsonSerializer.SerializeAsync(createStream, groups, options);
-       */
-        //var newconsole = groups;
-        // Если запрос пустой
         return groups.Count == 0
            ? new BadRequestResult()
            : await client.PostAsyncByToken<List<NewGroups>>(@"/api/sync/cont/marksToGroup", token, groups);
