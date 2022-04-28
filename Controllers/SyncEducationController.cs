@@ -1,12 +1,12 @@
 ﻿namespace parser_cont.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("[controller]/[action]")]
 public class SyncEducationController : ControllerBase
 {
      private const string Hosting = "http://localhost:8080";
 
-    [Route("/[action]")]
+    [Route("")]
     [HttpPost]
     public async Task<ActionResult<ArrayStudents>> StudentByIdDepartment(string token, string idFaculty)
     {
@@ -22,7 +22,7 @@ public class SyncEducationController : ControllerBase
     }
 
 
-    [Route("/[action]")]
+    [Route("")]
     [HttpPost]
     public async Task<ActionResult<List<NewGroups>>> StudentMarksByGroups(string token)
     {
@@ -40,7 +40,7 @@ public class SyncEducationController : ControllerBase
            : await client.PostAsyncByToken<List<NewGroups>>(@"/api/sync/cont/marksToGroup", token, groups);
     }
 
-    [Route("/[action]")]
+    [Route("")]
     [HttpPost]
     public async Task<ActionResult<ArrayStudents>> StudentByAllDepartment(string token)
     {
@@ -65,7 +65,7 @@ public class SyncEducationController : ControllerBase
            ? new BadRequestResult()
            : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/students", token, globalArray);
     }
-    [Route("/[action]")]
+    [Route("")]
     [HttpPost]
     public async Task<ActionResult<ArrayStudents>> AllSpecialty(string token)
     {

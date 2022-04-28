@@ -1,7 +1,7 @@
 ﻿namespace parser_cont.Controllers;
 
 [ApiController]
-[Route("[controller]/[controller]/[action]")]
+[Route("[controller]/[action]")]
 public class SyncPersonnelController : ControllerBase
 {
     private const string Hosting = "http://localhost:8080";
@@ -176,7 +176,7 @@ public class SyncPersonnelController : ControllerBase
         
         for (var i = 0; i < countDocuments; i++)
         {
-            globalArray.ArrayDocuments = await FirebirdServicePersonnel.GetDocumentsAsync(100, skip);
+            globalArray.ArrayDocuments = await FirebirdServicePersonnel.GetDocumentsAsync(25, skip);
 
             if (globalArray.ArrayDocuments.Count > 0)
             {
