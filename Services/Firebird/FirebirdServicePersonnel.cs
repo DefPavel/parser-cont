@@ -502,14 +502,13 @@ public static class FirebirdServicePersonnel
         public static async Task<IList<Vacations>> GetVacations()
         {
             List<Vacations> list = new();
-            const string sql = " select s.id , o.period , o.dlina ,o.ostatok, o.date_nach , o.date_kon,  p.name , p.date_crt , t.name as typ " +
-                               " from sotr s " +
-                               " inner join otpusk o on s.id = o.sotr_id " +
+            const string sql = " select distinct o.sotr_id , o.period , o.dlina ,o.ostatok, o.date_nach , o.date_kon,  p.name , p.date_crt , t.name as typ " +
+                               " from otpusk o " +
                                " inner join typ_otpusk t on o.typ_nick = t.nick " +
                                " inner join prikaz p on o.prikaz_id = p.id " +
                                " inner join sotr_doljn sd on s.id = sd.sotr_id " +
                                " where sd.dolj_id <> 0" +
-                               " order by s.id desc";
+                               " order by o.sotr_id desc";
             await using FbConnection connection = new(StringConnection);
             connection.Open();
             await using var transaction = await connection.BeginTransactionAsync();
