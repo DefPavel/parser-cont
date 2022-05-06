@@ -15,7 +15,8 @@ public static class FirebirdServicePersonnel
        };
 
         #region Список должностей на отдел
-        public static async Task<IList<Position>> GetPositionsAsync(int idDep)
+
+        private static async Task<IList<Position>> GetPositionsAsync(int idDep)
         {
             List<Position> list = new();
             var sql =
@@ -506,7 +507,7 @@ public static class FirebirdServicePersonnel
                                " from otpusk o " +
                                " inner join typ_otpusk t on o.typ_nick = t.nick " +
                                " inner join prikaz p on o.prikaz_id = p.id " +
-                               " inner join sotr_doljn sd on s.id = sd.sotr_id " +
+                               " inner join sotr_doljn sd on o.SOTR_ID = sd.sotr_id " +
                                " where sd.dolj_id <> 0" +
                                " order by o.sotr_id desc";
             await using FbConnection connection = new(StringConnection);
@@ -770,6 +771,17 @@ public static class FirebirdServicePersonnel
         #endregion
 
         #region Служебные перемещения
+
+        private static async Task<bool> GetStatus(string namePosition)
+        {
+            var sql = $" select first 1 is_ped from doljnost d  where d.name = '{namePosition.Trim()}'";
+            await using FbConnection connection = new(StringConnection);
+            connection.Open();
+            await using var transaction = await connection.BeginTransactionAsync();
+            await using FbCommand command = new(sql, connection, transaction);
+            await using var reader = await command.ExecuteReaderAsync();
+            return await reader.ReadAsync() && reader.GetString(0) == "T";
+        }
         public static async Task<IList<Move>> GetMovesAsync()
         {
             List<Move> list = new();
@@ -817,6 +829,7 @@ public static class FirebirdServicePersonnel
                 var contract = reader["typ_dog"] != DBNull.Value ? FirstCharToUpper(reader.GetString(9)) : "Не указано";
                 var dateCrt = reader["dcrt"] != DBNull.Value ? reader.GetDateTime(3).ToShortDateString() : "";
 
+                var position = reader["dolj_name"] != DBNull.Value ? reader.GetString(7) : "Не указано";
 
                 if (reader.GetString(9) == "Постійне місце роботи")
                 {
@@ -836,8 +849,8 @@ public static class FirebirdServicePersonnel
                     typeOrder = typeOrder,
                     count_budget = reader["kolvo_b"] != DBNull.Value ? reader.GetDecimal(4) : 0,
                     count_nobudget = reader["kolvo_nb"] != DBNull.Value ? reader.GetDecimal(5) : 0,
-                    name_dep = reader["otdel_name"] != DBNull.Value ? reader.GetString(6) : "Не укаазно",
-                    position = reader["dolj_name"] != DBNull.Value ? reader.GetString(7) : "Не укаазно",
+                    name_dep = reader["otdel_name"] != DBNull.Value ? reader.GetString(6) : "Не указано",
+                    position = position,
                     isMain = reader.GetString(8) == "T",
                     Contract = reader["typ_dog"] != DBNull.Value ? reader.GetString(9) : "Не указано",
                     dateBegin = reader["date_kontr_nach"] != DBNull.Value ? reader.GetDateTime(10).ToString("yyyy-MM-dd") : null,
@@ -847,6 +860,7 @@ public static class FirebirdServicePersonnel
                     orderDrop = reader["prikaz_end"] != DBNull.Value ? reader.GetString(14).Replace("  ", " ") : null,
                     PersonId = reader.GetInt32(15),
                     DateOrder = reader["dcrt"] != DBNull.Value ? reader.GetDateTime(16).ToString("yyyy-MM-dd") : null,
+                    isPed =  await GetStatus(position),
 
                 });
             }

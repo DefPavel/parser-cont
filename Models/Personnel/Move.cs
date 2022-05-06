@@ -23,6 +23,9 @@ public class Move
     public string position { get; internal set; }
     [JsonPropertyName("is_main")]
     public bool isMain { get; internal set; }
+    
+    [JsonPropertyName("is_ped")]
+    public bool isPed { get; internal set; }
     [JsonPropertyName("contract")]
     public string Contract { get; internal set; }
     [JsonPropertyName("date_start")]
