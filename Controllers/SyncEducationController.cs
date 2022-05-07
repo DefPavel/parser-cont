@@ -1,6 +1,4 @@
-﻿using System.Text.Encodings.Web;
-
-namespace parser_cont.Controllers;
+﻿namespace parser_cont.Controllers;
 
 [ApiController]
 [Route("[controller]/[action]")]

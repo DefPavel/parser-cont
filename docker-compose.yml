@@ -10,3 +10,8 @@ services:
       - "80:7000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+
+network:
+  net_network:
+    external: true
+    driver: bridge
