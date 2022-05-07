@@ -8,9 +8,13 @@ public class Groups
     public string Level { get; set; } = string.Empty;
     public string Form { get; internal set; } = string.Empty;
     public string Faculty { get; internal set; } = string.Empty;
-    public string Basis { get; internal set; } = string.Empty;
+    //public string Basis { get; internal set; } = string.Empty;
     public string RecordBook { get; internal set; } = string.Empty;
+    public int idSpecialty { get; internal set; } = 0;
+    public string orderName { get; internal set; } = string.Empty;
+    public string orderDate { get; internal set; } = string.Empty;
 
-    public List<Spesialty> Specialty { get; set; } = new();
+    public string orderType { get; internal set; } = string.Empty;
+    //public List<Spesialty> Specialty { get; set; } = new();
 }
 

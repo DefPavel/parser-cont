@@ -173,7 +173,14 @@ public static class FirebirdService
     {
         List<Groups> list = new();
         var sql =
-            $"select  G.id, G.NAME, G.KURS, G.GOD_OBR,  ST.NAME as LEVELS , FR.NAME as FORM , FF.NAME as FKNAME, SG.IS_BUDG, SG.N_ZACH  from stud_gruppa SG  inner join gruppa G on SG.GRUP_ID = G.id  inner join ST_LEVELS ST on ST.id = G.ST_LVL_ID  inner join FORM_OBUCH FR on FR.id = G.FO_ID  inner join FAKULTET FF on FF.id = G.FAK_ID  " +
+            $" select  G.id, G.NAME, G.KURS, G.GOD_OBR,  ST.NAME as LEVELS , FR.NAME as FORM , FF.NAME as FKNAME, SG.IS_BUDG, SG.N_ZACH , G.SPEC_ID , P.NAME as ORDER_NAME , P.DATE_CRT as DATE_ORDER , TP.NAME as TYPE_ORDER  " +
+            $" from stud_gruppa SG  " +
+            $" inner join gruppa G on SG.GRUP_ID = G.id  " +
+            $" inner join ST_LEVELS ST on ST.id = G.ST_LVL_ID  inner join FORM_OBUCH FR on FR.id = G.FO_ID  " +
+            $" inner join FAKULTET FF on FF.id = G.FAK_ID  " +
+            $" inner join PRIKAZ P on P.id = SG.PRIKAZ_ID  " +
+            $" inner join TYP_PRIKAZ TP on TP.id = P.TYP " +
+
             $" where SG.STUD_ID = {idStudent} " +
             $" and G.FAK_ID = {idFacult}" +
             $" and G.IS_VIP = 'F' ";
@@ -186,6 +193,10 @@ public static class FirebirdService
         while (await reader.ReadAsync())
         {
             var idGroup = reader.GetInt32(0);
+
+            var typeOrder = (string)reader["IS_BUDG"] == "T" && reader.GetString(12) == "зачисление"
+                ? "зачисление на бюджетное место"
+                : "зачисление на контрактное место";
             list.Add(new Groups
             {
                 IdGroup = idGroup,
@@ -195,9 +206,13 @@ public static class FirebirdService
                 Level = reader["LEVELS"] != DBNull.Value ? reader.GetString(4) : "",
                 Form = reader["FORM"] != DBNull.Value ? reader.GetString(5) : "",
                 Faculty = reader["FKNAME"] != DBNull.Value ? reader.GetString(6) : "",
-                Basis = (string)reader["IS_BUDG"] == "T" ? "бюджет" : "контракт",
+                //Basis = (string)reader["IS_BUDG"] == "T" ? "бюджет" : "контракт",
                 RecordBook = reader["N_ZACH"] != DBNull.Value ? reader.GetString(8) : "Не указано",// Зачетная книга
-                Specialty = await GetSpesialties(idGroup)
+                idSpecialty = reader.GetInt32(9), // Код специальности
+                orderName = reader["ORDER_NAME"] != DBNull.Value ? reader.GetString(10) : "Не указано",
+                orderDate = reader["DATE_ORDER"] != DBNull.Value ? reader.GetDateTime(11).ToShortDateString() : DateTime.MinValue.ToShortDateString(),
+                orderType = typeOrder,
+                //Specialty = await GetSpesialties(idGroup)
             });
         }
 
