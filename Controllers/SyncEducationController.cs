@@ -1,4 +1,6 @@
-﻿namespace parser_cont.Controllers;
+﻿using System.Collections.Generic;
+
+namespace parser_cont.Controllers;
 
 [ApiController]
 [Route("[controller]/[action]")]
@@ -37,20 +39,28 @@ public class SyncEducationController : ControllerBase
 
     [Route("")]
     [HttpPost]
-    public async Task<ActionResult<List<NewGroups>>> StudentMarksByGroups(string token)
+    public async Task<ActionResult<ArrayMarks>> StudentMarksByGroups(string token)
     {
         using ClientApi client = new(Hosting);
 
         // Get Groups for JMU
-        var groups = await client.GetAsyncByToken<List<NewGroups>>(@"/api/sync/cont/getGroups", token);
-
-        foreach (var item in groups)
+        var groups = await client.GetAsyncByToken<List<NewGroups>>(@"/api/education/groups/all", token);
+        ArrayMarks globalArray = new();
+        // Потом убери first items
+        foreach (var item in groups.Where(x => x.Id == 7))
         {
+
             item.ArrayStudents = await FirebirdService.GetStudentMarks(item.IdCont);
+            // globalArray.Arrays = await FirebirdService.GetStudentMarks(item.IdCont);
+           
+            // itemGroups.Add(item);
+            globalArray.Arrays.Add(item);
         }
+
+
         return groups.Count == 0
            ? new BadRequestResult()
-           : await client.PostAsyncByToken<List<NewGroups>>(@"/api/sync/cont/marksToGroup", token, groups);
+           : await client.PostAsyncByToken<ArrayMarks>(@"/api/sync/cont/marksToGroup", token, globalArray);
     }
 
     [Route("")]
