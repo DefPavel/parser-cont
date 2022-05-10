@@ -57,13 +57,18 @@ public class SyncEducationController : ControllerBase
         using ClientApi client = new(Hosting);
 
         ArrayMarks globalArray = new();
-        var groups = await FirebirdService.GetStudentMarks(idCont);
+        List<NewGroups> newGroups = new();
+        foreach (var item in newGroups)
+        {
+            item.Id = idCont;
+            item.IdCont = idCont;
+            item.ArrayStudents = await FirebirdService.GetStudentMarks(item.IdCont);
+            // globalArray.Arrays = await FirebirdService.GetStudentMarks(item.IdCont);
 
-        //globalArray.Arrays.AddRange(groups);
-
-
-
-        return groups.Count == 0
+            // itemGroups.Add(item);
+            globalArray.Arrays.Add(item);
+        }
+        return newGroups.Count == 0
            ? new BadRequestResult()
            : await client.PostAsyncByToken<ArrayMarks>(@"/api/sync/cont/marksToGroup", token, globalArray);
     }
