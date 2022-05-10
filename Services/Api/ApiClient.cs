@@ -71,6 +71,20 @@ public class ClientApi : IDisposable
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync();
     }
+
+    public async Task<string> GetAsyncByTokenAndPayload(string url, string token)
+    {
+        EnsureHttpClientCreated();
+        if (!_httpClient.DefaultRequestHeaders.Contains("auth-token"))
+        {
+            _httpClient.DefaultRequestHeaders.Add("auth-token", token);
+        }
+       // _httpClient.
+        using var response = await _httpClient.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStringAsync();
+    }
+
     public async Task<string> GetAsync(string url)
     {
         EnsureHttpClientCreated();

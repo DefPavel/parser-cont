@@ -1,15 +1,29 @@
-﻿using System.Collections.Generic;
-
-namespace parser_cont.Controllers;
+﻿namespace parser_cont.Controllers;
 
 [ApiController]
 [Route("[controller]/[action]")]
 public class SyncEducationController : ControllerBase
 {
-     private const string Hosting = "http://localhost:8080";
+    private const string Hosting = "http://localhost:8080";
 
     [Route("")]
     [HttpPost]
+    public async Task<ActionResult<ArrayStudents>> AllSpecialty(string token)
+    {
+        using ClientApi client = new(Hosting);
+        ArrayStudents globalArray = new()
+        {
+            ArraySpecialty = await FirebirdService.GetNewSpecialty()
+        };
+        // Если запрос пустой
+        return globalArray.ArraySpecialty.Count == 0
+            ? new BadRequestResult()
+            : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/specialty", token, globalArray);
+    }
+
+    [Route("")]
+    [HttpPost]
+
     public async Task<ActionResult<ArrayStudents>> StudentByIdDepartment(string token, string idFaculty)
     {
         using ClientApi client = new(Hosting);
@@ -23,7 +37,7 @@ public class SyncEducationController : ControllerBase
         Console.OutputEncoding = Encoding.UTF8;
         JsonSerializerOptions options = new()
         {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             WriteIndented = true
         };
         
@@ -36,18 +50,34 @@ public class SyncEducationController : ControllerBase
            : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/students", token, globalArray);
     }
 
-
     [Route("")]
     [HttpPost]
-    public async Task<ActionResult<ArrayMarks>> StudentMarksByGroups(string token)
+    public async Task<ActionResult<ArrayMarks>> StudentMarksByGroups(string token , int idCont)
     {
         using ClientApi client = new(Hosting);
 
-        // Get Groups for JMU
-        var groups = await client.GetAsyncByToken<List<NewGroups>>(@"/api/education/groups/all", token);
+        ArrayMarks globalArray = new();
+        var groups = await FirebirdService.GetStudentMarks(idCont);
+
+        //globalArray.Arrays.AddRange(groups);
+
+
+
+        return groups.Count == 0
+           ? new BadRequestResult()
+           : await client.PostAsyncByToken<ArrayMarks>(@"/api/sync/cont/marksToGroup", token, globalArray);
+    }
+    [Route("")]
+    [HttpPost]
+    public async Task<ActionResult<ArrayMarks>> StudentMarksByFaculty(string token , int idDepartment , int idForm , int idLevel , int course)
+    {
+        using ClientApi client = new(Hosting);
+
+    // Get Groups for JMU
+        var groups = await client.GetAsyncByToken<List<NewGroups>>($"/api/education/groups/tree/all?idDepartment={idDepartment}&idForm={idForm}&idLevel={idLevel}&course={course}", token);
         ArrayMarks globalArray = new();
         // Потом убери first items
-        foreach (var item in groups.Where(x => x.Id == 7))
+        foreach (var item in groups)
         {
 
             item.ArrayStudents = await FirebirdService.GetStudentMarks(item.IdCont);
@@ -56,14 +86,10 @@ public class SyncEducationController : ControllerBase
             // itemGroups.Add(item);
             globalArray.Arrays.Add(item);
         }
-
-
-        return groups.Count == 0
-           ? new BadRequestResult()
-           : await client.PostAsyncByToken<ArrayMarks>(@"/api/sync/cont/marksToGroup", token, globalArray);
+        return await client.PostAsyncByToken<ArrayMarks>(@"/api/sync/cont/marksToGroup", token, globalArray);
     }
 
-    [Route("")]
+    /*[Route("")]
     [HttpPost]
     public async Task<ActionResult<ArrayStudents>> StudentByAllDepartment(string token)
     {
@@ -82,24 +108,11 @@ public class SyncEducationController : ControllerBase
             WriteIndented = true
         };
         await JsonSerializer.SerializeAsync(createStream, globalArray, options);
-        */
         // Если запрос пустой
         return globalArray.ArrayStudent.Count == 0
            ? new BadRequestResult()
            : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/students", token, globalArray);
     }
-    [Route("")]
-    [HttpPost]
-    public async Task<ActionResult<ArrayStudents>> AllSpecialty(string token)
-    {
-        using ClientApi client = new(Hosting);
-        ArrayStudents globalArray = new()
-        {
-            ArraySpecialty = await FirebirdService.GetNewSpecialty()
-        };
-        // Если запрос пустой
-        return globalArray.ArraySpecialty.Count == 0
-            ? new BadRequestResult()
-            : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/specialty", token, globalArray);
-    }
+*/
+   
 }
