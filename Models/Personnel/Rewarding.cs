@@ -7,7 +7,7 @@ public class Rewarding
     [JsonPropertyName("type_order")] public string TypeOrder { get; set; } = "Награждение";
     [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
     [JsonPropertyName("num_doc")] public string NumberDocument { get; internal set; } = string.Empty;
-    [JsonPropertyName("order")] public string OrderName { get; internal set; } = string.Empty;
-    [JsonPropertyName("date_order")] public string DateOrder { get; internal set; } = string.Empty;
-    [JsonPropertyName("date_issuing")] public string DateIssuing { get; internal set; } = string.Empty;
+    [JsonPropertyName("order")] public string? OrderName { get; internal set; }
+    [JsonPropertyName("date_order")] public string? DateOrder { get; internal set; } 
+    [JsonPropertyName("date_issuing")] public string? DateIssuing { get; internal set; }
 }

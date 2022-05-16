@@ -7,7 +7,7 @@ public class Invalids
     [JsonPropertyName("date_begin")]
     public string DateBegin { get; set; } = string.Empty;
     [JsonPropertyName("date_end")]
-    public string DateEnd { get; set; } = string.Empty;
+    public string? DateEnd { get; set; }
     [JsonPropertyName("for_life")]
     public bool ForLife { get; set; }
     [JsonPropertyName("group")]

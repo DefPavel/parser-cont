@@ -31,11 +31,11 @@ public class PersonPosition
     [JsonPropertyName("is_pluralism_oter")]
     public bool IsPluralismOter { get; set; } // Внешний совместитель
     [JsonPropertyName("data_start_contract")]
-    public string DateStartContract { get; set; } = string.Empty;
+    public string? DateStartContract { get; set; }
     [JsonPropertyName("date_end_contract")]
-    public string DateEndContract { get; set; } = string.Empty;
+    public string? DateEndContract { get; set; } 
     [JsonPropertyName("date_drop")]
-    public string DateDrop { get; set; } = string.Empty;
+    public string? DateDrop { get; set; } 
     [JsonPropertyName("position_drop")]
-    public string PositionDrop { get; set; } = string.Empty;
+    public string? PositionDrop { get; set; } 
 }

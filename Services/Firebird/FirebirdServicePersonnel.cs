@@ -20,7 +20,7 @@ public static class FirebirdServicePersonnel
             // Через Массивы намного быстрее идет заполнение 
             // List - 7 сек.
             // Array - 3 сек.
-            var array = Array.Empty<Position>();
+            var array = new List<Position>();
             var sql =
                 $" select distinct (D.NAME), D.IS_PED,D.OKLAD_B, D.OKLAD_NB,D.OTPUSK,D.KOLVO_B,D.KOLVO_NB,D.FREE_B,D.FREE_NB,D.PRIORITI_DOLJ,D.NAME_ROD  from DOLJNOST D where D.OTDEL_ID = {idDep}";
 
@@ -34,7 +34,7 @@ public static class FirebirdServicePersonnel
                 // Поднимаем первую букву 
                 var namePosition = FirstCharToUpper(reader.GetString(0).Trim());
 
-                _ = array.Append(new Position
+                array.Add(new Position
                 {
                     Name = namePosition,
                     IsPed = (string)reader["IS_PED"] == "T",
@@ -49,14 +49,14 @@ public static class FirebirdServicePersonnel
                     padeg = reader["NAME_ROD"] != DBNull.Value ? reader.GetString(10).Trim() : "Не указано"
                 });
             }
-            return array;
+            return array.AsReadOnly();
         }
         #endregion
 
         #region Список отделов
         public static async Task<IEnumerable<Department>> GetDepartment()
         {
-            var array = Array.Empty<Department>();
+            var array = new List<Department>();
             const string sql = $" select * from get_tree_root;";
 
             await using FbConnection connection = new(StringConnection);
@@ -79,7 +79,7 @@ public static class FirebirdServicePersonnel
                 "Не указано";
                 if (typeDep == null) throw new ArgumentNullException(nameof(typeDep));
 
-                _ = array.Append(new Department
+                array.Add(new Department
                 {
                     Id = reader.GetInt32(1),
                     Phone = reader["phone"] != DBNull.Value ? reader.GetString(2).Trim() : "Не указано",
@@ -94,7 +94,7 @@ public static class FirebirdServicePersonnel
             }
             await reader.CloseAsync();
 
-            return array;
+            return array.AsReadOnly();
         }
 
         #endregion
@@ -114,7 +114,7 @@ public static class FirebirdServicePersonnel
         }
         public static async Task<IEnumerable<Persons>> GetPersonsAsync(int first = 100 , int skip = 0)
         {
-            var array = Array.Empty<Persons>();
+            var array = new List<Persons>();
             const string sql = "select" +
                                // $" first {first} " +
                                // $" skip {skip}" +
@@ -158,7 +158,6 @@ public static class FirebirdServicePersonnel
             await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sql, connection, transaction);
             await using var reader = await command.ExecuteReaderAsync();
-            if (!reader.HasRows) return Array.Empty<Persons>();
             while (await reader.ReadAsync())
             {
                 //byte[] temp_backToBytes = Convert.FromBase64String((byte[])reader["photo"]);
@@ -179,7 +178,7 @@ public static class FirebirdServicePersonnel
                 }
 
             //Внешний совместитель
-                _ = array.Append(new Persons
+                array.Add(new Persons
                 {
                     persId = reader.GetInt32(27),
                     FirstName = reader.GetString(0).Trim(),
@@ -224,12 +223,12 @@ public static class FirebirdServicePersonnel
                 });
 
             }
-            return array;
+            return array.AsReadOnly();
         }
 
         private static async Task<IEnumerable<ChlenAcademic>> ChlenAcademicsAsync(int idPers)
         {
-            var list = Array.Empty<ChlenAcademic>();
+            var list = new List<ChlenAcademic>();
 
             var sql =
                 $" select distinct chl.name , chl.academ_name, chl.num_diploma , chl.obr_date from sotr_chlen_academ chl where chl.sotr_id ={idPers}";
@@ -243,7 +242,7 @@ public static class FirebirdServicePersonnel
             if (!reader.HasRows) return list;
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new ChlenAcademic
+                list.Add(new ChlenAcademic
                 {
                     Type = reader.GetString(0),
                     AcademicalName = reader["name"] != DBNull.Value ? reader.GetString(1) : "Не указано",
@@ -256,7 +255,7 @@ public static class FirebirdServicePersonnel
 
         private static async Task<IEnumerable<Medical>> GetMedicals(int idPers)
         {
-            var list = Array.Empty<Medical>();
+            var list = new List<Medical>();
 
             var sql =
                 $" select distinct pm.text , mk.name , pm.date_start , pm.date_finish from pers_med pm inner join med_kategor mk on mk.id = pm.kat_id where pm.sotr_id ={idPers}";
@@ -270,12 +269,12 @@ public static class FirebirdServicePersonnel
             if (!reader.HasRows) return list;
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new Medical
+                list.Add(new Medical
                 {
                     Name = reader.GetString(0),
                     Type = reader.GetString(1),
-                    DateBegin = reader["date_start"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : string.Empty,
-                    DateEnd = reader["date_finish"] != DBNull.Value ? reader.GetDateTime(3).ToString("yyyy-MM-dd") : string.Empty,
+                    DateBegin = reader["date_start"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : null,
+                    DateEnd = reader["date_finish"] != DBNull.Value ? reader.GetDateTime(3).ToString("yyyy-MM-dd") : null,
                 });
             }
             return list;
@@ -283,7 +282,7 @@ public static class FirebirdServicePersonnel
 
         private static async Task<IEnumerable<HistoryBook>> GetHistoryBooksAsync(int idPerson)
         {
-            var list = Array.Empty<HistoryBook>();
+            var list = new List<HistoryBook>();
             var sql =
                 $"select tk.n_zap , tk.date_zap , tk.info , tk.staj_ob ,tk.staj_ped, tk.staj_nauch , tk.staj_lgpu , tk.staj_bibl, tk.staj_muzei, tk.staj_med, tk.prikaz_name  from trud_knizka tk where tk.date_zap is not null and tk.sotr_id = {idPerson}";
 
@@ -296,7 +295,7 @@ public static class FirebirdServicePersonnel
             if (!reader.HasRows) return list;
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new HistoryBook
+                list.Add(new HistoryBook
                 {
                     numberRecord = record,
                     dateInsert = reader.GetDateTime(1).ToString("yyyy-MM-dd"),
@@ -319,7 +318,7 @@ public static class FirebirdServicePersonnel
 
         private static async Task<IEnumerable<Education>> GetEducationsAsync(int idPerson)
         {
-            var list = Array.Empty<Education>();
+            var list = new List<Education>();
             var sql =
                 $"select distinct ed.uch_zav , ed.typ_obr , ed.spec , ed.kvalification , ed.date_vidachy ,ed.n_diploma , ed.is_osn from education ed where ed.date_vidachy is not null and ed.sotr_id = {idPerson}";
 
@@ -331,7 +330,7 @@ public static class FirebirdServicePersonnel
             if (!reader.HasRows) return list;
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new Education
+                list.Add(new Education
                 {
                     institution = reader.GetString(0),
                     type = reader.GetString(1),
@@ -347,7 +346,7 @@ public static class FirebirdServicePersonnel
 
         private static async Task<IEnumerable<Invalids>> GetInvalids(int idPerson)
         {
-            var list = Array.Empty<Invalids>();
+            var list = new List<Invalids>();
             var sql =
                 $"select NUM_DOC , DATE_BEGIN , DATE_END , FOR_DEATH , GROUPE  from SOTR_INV where SOTR_INV.sotr_id = {idPerson}";
 
@@ -360,11 +359,11 @@ public static class FirebirdServicePersonnel
             while (await reader.ReadAsync())
             {
                 // Console.WriteLine(idPerson);
-                _ = list.Append(new Invalids
+                list.Add(new Invalids
                 {
                     NameDocument = reader["num_doc"] != DBNull.Value ? reader.GetString(0) : "Не указано",
                     DateBegin = reader["DATE_BEGIN"] != DBNull.Value ? reader.GetDateTime(1).ToString("yyyy-MM-dd") : "1900-01-01",
-                    DateEnd = reader["DATE_END"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : string.Empty,
+                    DateEnd = reader["DATE_END"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : null,
                     ForLife = reader.GetString(3) == "T",
                     Group = reader["GROUPE"] != DBNull.Value ? reader.GetInt16(4) : 0
                 });
@@ -374,7 +373,7 @@ public static class FirebirdServicePersonnel
 
         private static async Task<IEnumerable<Pensioners>> GetPensionerAsync(int idPerson)
         {
-            var list = Array.Empty<Pensioners>();
+            var list = new List<Pensioners>();
 
             var sql =
                 $"select num_doc , date_doc , PRICINA_VYHODA  from SOTR_PENS where SOTR_PENS.sotr_id = {idPerson}";
@@ -387,7 +386,7 @@ public static class FirebirdServicePersonnel
             if (!reader.HasRows) return list;
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new Pensioners
+                list.Add(new Pensioners
                 {
                     Document = reader["num_doc"] != DBNull.Value ? reader.GetString(0) : "Не указано",
                     DateDocument = reader["date_doc"] != DBNull.Value ? reader.GetDateTime(1).ToString("yyyy-MM-dd") : "1900-01-01",
@@ -399,7 +398,7 @@ public static class FirebirdServicePersonnel
 
         private static async Task<IEnumerable<Family>> GetFamiliesAsync(int idPers)
         {
-            var list = Array.Empty<Family>();
+            var list = new List<Family>();
             var sql = "select f.typ , f.FIO , f.prim from FAMILY f where f.sotr_id = " + idPers;
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -409,7 +408,7 @@ public static class FirebirdServicePersonnel
             if (!reader.HasRows) return list;
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new Family
+                list.Add(new Family
                 {
                     Type = reader.GetString(0),
                     FullName = reader.GetString(1),
@@ -421,7 +420,7 @@ public static class FirebirdServicePersonnel
 
         private static async Task<IEnumerable<ChangeSurname>> GetChangeSurname(int idPers)
         {
-            var array = Array.Empty<ChangeSurname>(); 
+            var array = new List<ChangeSurname>(); 
             var sql =
                 $" select CF.ex_famil , P.name , P.date_crt , P.typ from CHANGED_FAMILS CF inner join prikaz p on p.id = CF.prikaz_id where CF.sotr_id = {idPers}";
             await using FbConnection connection = new(StringConnection);
@@ -435,7 +434,7 @@ public static class FirebirdServicePersonnel
                 var typeOrder =
                     reader.GetString(3) == "famil" ? "Смена фамилии" : "";
 
-                _ = array.Append(new ChangeSurname
+                array.Add(new ChangeSurname
                 {
                     OldSurname = reader["ex_famil"] != DBNull.Value ? reader.GetString(0) : "Не указано",
                     Order = $"{reader.GetString(1)}(от {reader.GetDateTime(2).ToShortDateString()})",
@@ -448,7 +447,7 @@ public static class FirebirdServicePersonnel
 
         private static async Task<IEnumerable<PersonPosition>> GetPersonPosition(int idPerson)
         {
-            var list = Array.Empty<PersonPosition>();
+            var list = new List<PersonPosition>();
             var sql =
                 $"select d.name as DNAME,o.name as ONAME,pr.name as ORDERS,pr.date_crt as DATEORDER,pr.typ as TYPEORDER,td.name as CONTRACT,mj.name as PLACE,sd.is_osn as ISMAIN,sd.kolvo_b,sd.kolvo_nb,s.is_outher ,d.is_ped ,sd.date_kontr_nach,sd.date_kontr_kon,sd.dat_drop,sd.dolj_uvoln from sotr s inner join sotr_doljn sd on s.id = sd.sotr_id left join MESTO_JOB mj on mj.id = sd.MESTO_JOB left join TYP_DOGOVOR td on td.id = sd.typ_dog inner join prikaz pr on pr.id = sd.prikaz_id inner join doljnost d on d.id = sd.dolj_id inner join otdel o on o.id = d.otdel_id where s.id = {idPerson}";
 
@@ -469,7 +468,7 @@ public static class FirebirdServicePersonnel
                     reader.GetString(4) == "prodstd" ? "Продление СТД" :
                     reader.GetString(4) == "den" ? "Денежная компенсация за неиспользованный отпуск" :
                     "";
-                _ = list.Append(new PersonPosition
+                list.Add(new PersonPosition
                 {
                     Position = reader.GetString(0).Trim(),
                     Department = reader.GetString(1).Trim(),
@@ -484,10 +483,10 @@ public static class FirebirdServicePersonnel
                     IsPluralismOter = reader.GetString(10) == "T", //Внешний совместитель
                     IsPluralismInner = (reader.GetString(7) == "F" && reader.GetString(10) == "F"), // Совместитель
                     IsPed = reader.GetString(11) == "T",
-                    DateStartContract = reader["date_kontr_nach"] != DBNull.Value ? reader.GetDateTime(12).ToString("yyyy-MM-dd") : string.Empty,
-                    DateEndContract = reader["date_kontr_kon"] != DBNull.Value ? reader.GetDateTime(13).ToString("yyyy-MM-dd") : string.Empty,
-                    DateDrop = reader["dat_drop"] != DBNull.Value ? reader.GetDateTime(14).ToString("yyyy-MM-dd") : string.Empty,
-                    PositionDrop = reader["dolj_uvoln"] != DBNull.Value ? reader.GetString(15) : string.Empty,
+                    DateStartContract = reader["date_kontr_nach"] != DBNull.Value ? reader.GetDateTime(12).ToString("yyyy-MM-dd") : null,
+                    DateEndContract = reader["date_kontr_kon"] != DBNull.Value ? reader.GetDateTime(13).ToString("yyyy-MM-dd") : null,
+                    DateDrop = reader["dat_drop"] != DBNull.Value ? reader.GetDateTime(14).ToString("yyyy-MM-dd") : null,
+                    PositionDrop = reader["dolj_uvoln"] != DBNull.Value ? reader.GetString(15) : null,
                 });
 
             }
@@ -500,7 +499,7 @@ public static class FirebirdServicePersonnel
 
         public static async Task<IEnumerable<Vacations>> GetVacations()
         {
-            var list = Array.Empty<Vacations>();
+            var list = new List<Vacations>();
             const string sql = " select distinct o.sotr_id , o.period , o.dlina ,o.ostatok, o.date_nach , o.date_kon,  p.name , p.date_crt , t.name as typ " +
                                " from otpusk o " +
                                " inner join typ_otpusk t on o.typ_nick = t.nick " +
@@ -515,14 +514,14 @@ public static class FirebirdServicePersonnel
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new Vacations
+                list.Add(new Vacations
                 {
                     PersonId = reader.GetInt32(0),
                     Period = reader["period"] != DBNull.Value ? reader.GetString(1) : "Не указано",
                     Length = reader["dlina"] != DBNull.Value ? reader.GetInt32(2) : 0,
                     Ostatok = reader["ostatok"] != DBNull.Value ? reader.GetInt32(3) : 0,
-                    DateStart = reader["date_nach"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : string.Empty,
-                    DateEnd = reader["date_kon"] != DBNull.Value ? reader.GetDateTime(5).ToString("yyyy-MM-dd") : string.Empty,
+                    DateStart = reader["date_nach"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : null,
+                    DateEnd = reader["date_kon"] != DBNull.Value ? reader.GetDateTime(5).ToString("yyyy-MM-dd") : null,
                     OrderName = $"{reader.GetString(6)}(от {reader.GetDateTime(7).ToShortDateString()})",
                     DateOrder = reader.GetDateTime(7).ToString("yyyy-MM-dd"),
                     TypeVacation = reader.GetString(8),
@@ -555,7 +554,7 @@ public static class FirebirdServicePersonnel
         }
         public static async Task<IEnumerable<Documents>> GetDocumentsAsync(int first = 100 , int skip = 0)
         {
-            var list = Array.Empty<Documents>();
+            var list = new List<Documents>();
             //string path = "D:\\documents\\";
             var sql =
                 $"select first {first} skip {skip} distinct s.id, td.name,  sdd.doc , sdd.name  from sotr s   inner join sotr_doljn sd on s.id = sd.sotr_id  inner join sotr_document sdd on s.id = sdd.sotr_id  inner join typ_sotr_doc td on sdd.typ = td.id  where sd.dolj_id <> 0 and sdd.name is not null and sdd.doc is not null  order by s.id desc ";
@@ -567,7 +566,7 @@ public static class FirebirdServicePersonnel
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new Documents
+                list.Add(new Documents
                 {
                     IdPers = reader.GetInt32(0),
                     Type = reader.GetString(1),
@@ -585,7 +584,7 @@ public static class FirebirdServicePersonnel
         #region Список награждений
         public static async Task<IEnumerable<Rewarding>> GetRewarding()
         {
-            var list = Array.Empty<Rewarding>();
+            var list = new List<Rewarding>();
             const string sql = " select distinct s.id , tn.name , sn.prim , p.name as order_name, p.date_crt as date_order  , sn.date_crt as date_issuing " +
                                " from sotr s " +
                                " inner join sotr_nagrad sn on s.id = sn.sotr_id " +
@@ -601,14 +600,14 @@ public static class FirebirdServicePersonnel
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new Rewarding
+                list.Add(new Rewarding
                 {
                     PersonId = reader.GetInt32(0),
                     Name = reader.GetString(1),
                     NumberDocument = reader["prim"] != DBNull.Value ? reader.GetString(2) : string.Empty,
-                    OrderName = reader["date_order"] != DBNull.Value ? $"{reader.GetString(3)}(от {reader.GetDateTime(4).ToShortDateString()})" : string.Empty,
-                    DateOrder = reader["date_order"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : string.Empty,
-                    DateIssuing = reader["date_issuing"] != DBNull.Value ? reader.GetDateTime(5).ToString("yyyy-MM-dd") : string.Empty,
+                    OrderName = reader["date_order"] != DBNull.Value ? $"{reader.GetString(3)}(от {reader.GetDateTime(4).ToShortDateString()})" : null,
+                    DateOrder = reader["date_order"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : null,
+                    DateIssuing = reader["date_issuing"] != DBNull.Value ? reader.GetDateTime(5).ToString("yyyy-MM-dd") : null,
                 });
             }
             return list;
@@ -619,7 +618,7 @@ public static class FirebirdServicePersonnel
         #region Повыщение квалификации
         public static async Task<IEnumerable<Qualification>> GetQualification()
         {
-            var list = Array.Empty<Qualification>();
+            var list = new List<Qualification>();
             const string sql = $"select distinct s.id, kv.kurs_name , kv.date_nach , kv.date_kon , kv.mesto_prohogd ,kv.n_svid , kv.date_vidachy " +
                                " from sotr s " +
                                " inner join sotr_doljn sd on s.id = sd.sotr_id " +
@@ -635,15 +634,15 @@ public static class FirebirdServicePersonnel
             {
                 while (await reader.ReadAsync())
                 {
-                    _ = list.Append(new Qualification
+                    list.Add(new Qualification
                     {
                         IdPerson = reader.GetInt32(0),
                         CourseName = reader.GetString(1),
-                        DateBegin = reader["date_nach"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : string.Empty,
-                        DateEnd = reader["date_kon"] != DBNull.Value ? reader.GetDateTime(3).ToString("yyyy-MM-dd") : string.Empty,
+                        DateBegin = reader["date_nach"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : null,
+                        DateEnd = reader["date_kon"] != DBNull.Value ? reader.GetDateTime(3).ToString("yyyy-MM-dd") : null,
                         Place = reader["mesto_prohogd"] != DBNull.Value ? reader.GetString(4) : "Не указано",
                         NumberCertificate = reader["n_svid"] != DBNull.Value ? reader.GetString(5) : "Не указано",
-                        DateIssue = reader["date_vidachy"] != DBNull.Value ? reader.GetDateTime(6).ToString("yyyy-MM-dd") : string.Empty,
+                        DateIssue = reader["date_vidachy"] != DBNull.Value ? reader.GetDateTime(6).ToString("yyyy-MM-dd") : null,
                     });
                 }
             }
@@ -655,7 +654,7 @@ public static class FirebirdServicePersonnel
         #region Ученое Звание
         public static async Task<IEnumerable<UchZvanie>> GetUchZvanieList()
         {
-            var list = Array.Empty<UchZvanie>();
+            var list = new List<UchZvanie>();
 
             const string sql = "select distinct s.id , tp.name, uz.kafedra , uz.date_prisv_zvan , uz.n_docum, uz.place_prisv_zvan " +
                                "from sotr s " +
@@ -672,7 +671,7 @@ public static class FirebirdServicePersonnel
             if (!reader.HasRows) return list;
             while (await reader.ReadAsync())
             {
-                _ = list.Append(new UchZvanie
+                list.Add(new UchZvanie
                 {
                     IdPerson = reader.GetInt32(0),
                     Type = reader.GetString(1),
@@ -690,7 +689,7 @@ public static class FirebirdServicePersonnel
         #region Ученая степень
         public static async Task<IEnumerable<ScientificDegree>> GetScientificDegrees()
         {
-            var list = Array.Empty<ScientificDegree>();
+            var list = new List<ScientificDegree>();
             const string sql = $" select ns.sotr_id " +
                                ", ns.n_diploma" +
                                ", ns.date_vyd" +
@@ -721,7 +720,7 @@ public static class FirebirdServicePersonnel
                 while (await reader.ReadAsync())
                 {
                     var academic = reader.GetString(3) == "kn" ? "Кандидат наук" : "Доктор наук";
-                    _ = list.Append(new ScientificDegree
+                    list.Add(new ScientificDegree
                     {
                         PersonId = reader.GetInt32(0),
                         NumberDocument = reader["n_diploma"] != DBNull.Value ? reader.GetString(1) : "Не указано",
@@ -760,7 +759,7 @@ public static class FirebirdServicePersonnel
         }
         public static async Task<IEnumerable<Move>> GetMovesAsync()
         {
-            var list = Array.Empty<Move>();
+            var list = new List<Move>();
             const string sql = "select distinct " +
                                "sm.date_crt ," +
                                " p.name ," +
@@ -818,7 +817,7 @@ public static class FirebirdServicePersonnel
                 }
 
 
-                _ = list.Append(new Move
+                list.Add(new Move
                 {
                     dateInsert = reader.GetDateTime(0).ToString("yyyy-MM-dd"),
                     order = $"{reader.GetString(1)} от({dateCrt})",
@@ -829,13 +828,13 @@ public static class FirebirdServicePersonnel
                     position = position,
                     isMain = reader.GetString(8) == "T",
                     Contract = reader["typ_dog"] != DBNull.Value ? reader.GetString(9) : "Не указано",
-                    dateBegin = reader["date_kontr_nach"] != DBNull.Value ? reader.GetDateTime(10).ToString("yyyy-MM-dd") : string.Empty,
-                    dateEnd = reader["date_kontr_kon"] != DBNull.Value ? reader.GetDateTime(11).ToString("yyyy-MM-dd") : string.Empty,
-                    dateDrop = reader["date_drop"] != DBNull.Value ? reader.GetDateTime(12).ToString("yyyy-MM-dd") : string.Empty,
+                    dateBegin = reader["date_kontr_nach"] != DBNull.Value ? reader.GetDateTime(10).ToString("yyyy-MM-dd") : null,
+                    dateEnd = reader["date_kontr_kon"] != DBNull.Value ? reader.GetDateTime(11).ToString("yyyy-MM-dd") : null,
+                    dateDrop = reader["date_drop"] != DBNull.Value ? reader.GetDateTime(12).ToString("yyyy-MM-dd") : null,
                     dayVacation = reader["OTP_DAYS"] != DBNull.Value ? reader.GetInt32(13) : 0,
-                    orderDrop = reader["prikaz_end"] != DBNull.Value ? reader.GetString(14).Replace("  ", " ") : string.Empty,
+                    orderDrop = reader["prikaz_end"] != DBNull.Value ? reader.GetString(14).Replace("  ", " ") : null,
                     PersonId = reader.GetInt32(15),
-                    DateOrder = reader["dcrt"] != DBNull.Value ? reader.GetDateTime(16).ToString("yyyy-MM-dd") : string.Empty,
+                    DateOrder = reader["dcrt"] != DBNull.Value ? reader.GetDateTime(16).ToString("yyyy-MM-dd") : null,
                     isPed =  await GetStatus(position),
 
                 });
@@ -848,7 +847,7 @@ public static class FirebirdServicePersonnel
         #region Генерация фотографий 3x4
         public static async Task<IEnumerable<Image>> GetPhoto(int first = 100, int skip = 0)
         {
-            var list = Array.Empty<Image>();
+            var list = new List<Image>();
             var sql =
                 $"select first {first} skip {skip} s.id, s.photo from sotr s inner join sotr_doljn sd on s.id = sd.sotr_id  where s.photo is not null and sd.dolj_id <> 0 order by s.id desc ";
 
@@ -861,7 +860,7 @@ public static class FirebirdServicePersonnel
             {
                 try
                 {
-                    _ = list.Append(new Image
+                    list.Add(new Image
                     {
                         id_person = reader.GetInt32(0),
                         photo = reader["photo"] is byte[] ? Convert.ToBase64String(reader["photo"] as byte[] ?? Array.Empty<byte>()) : null

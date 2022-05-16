@@ -10,7 +10,7 @@ public class Vacations
     [JsonPropertyName("order")] public string OrderName { get; set; } = string.Empty;
     [JsonPropertyName("date_order")] public string DateOrder { get; set; } = string.Empty;
     [JsonPropertyName("type_order")] public string TypeOrder { get; set; } = "Отпуск";
-    [JsonPropertyName("date_start")] public string DateStart { get; set; } = string.Empty;
-    [JsonPropertyName("date_end")] public string DateEnd { get; set; } = string.Empty;
+    [JsonPropertyName("date_start")] public string? DateStart { get; set; }
+    [JsonPropertyName("date_end")] public string? DateEnd { get; set; }
 
 }

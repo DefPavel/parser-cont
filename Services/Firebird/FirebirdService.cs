@@ -64,7 +64,7 @@ public static class FirebirdService
     };
     public static async Task<IEnumerable<StudentOcenka>> GetStudentMarks(int groupId)
     {
-        var list = Array.Empty<StudentOcenka>();
+        var list = new List<StudentOcenka>();
         var sql =
             $" select s.id from student s inner join stud_gruppa sg on s.id = sg.stud_id  inner join gruppa g on g.id = sg.grup_id  where g.is_vip = 'F' and g.id = {groupId}";
         await using FbConnection connection = new(StringConnection);
@@ -74,7 +74,7 @@ public static class FirebirdService
         var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            list.Append(new StudentOcenka
+            list.Add(new StudentOcenka
             {
                 Id = reader.GetInt32(0),
                 Plans = await GetPlan(reader.GetInt32(0))
@@ -87,7 +87,7 @@ public static class FirebirdService
     }
     public static async Task<IEnumerable<Plan>> GetPlan(int idStudent)
     {
-        var list = Array.Empty<Plan>();
+        var list = new List<Plan>();
         var sql =
             "select distinct up.name, up.semestr , up.typ , o.ball, o.ocenka, o.ocenka_ects " +
             "from student s " +
@@ -114,7 +114,7 @@ public static class FirebirdService
             else
                 marks = reader.GetString(4);
 
-            _ = list.Append(new Plan
+            list.Add(new Plan
             {
                 SubjectName = reader["name"] != DBNull.Value ? reader.GetString(0).Trim() : "не указано",
                 Semester = reader["semestr"] != DBNull.Value ? reader.GetString(1) : "0",
@@ -131,7 +131,7 @@ public static class FirebirdService
     }
     public static async Task<IEnumerable<Specialtys>> GetNewSpecialty()
     {
-        var list = Array.Empty<Specialtys>();
+        var list = new List<Specialtys>();
         const string sql = " select s.name as specialty ,s.id, s.nick,   s.min_id , s.prof_podg  , sl.name as st_level ,fo.name as fo_name, fak.name as fak_name" +
                            " from specialnost s"
                            + " inner join gruppa g on g.spec_id = s.id"
@@ -147,7 +147,7 @@ public static class FirebirdService
         var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            _ = list.Append(new Specialtys
+            list.Add(new Specialtys
             {
                 IdSpecialty = reader.GetInt32(1),
                 NameSpecialty = reader.GetString(0).ToLower().Trim(),
@@ -169,7 +169,7 @@ public static class FirebirdService
     }
     private static async Task<IEnumerable<Groups>> GetGroups(int idStudent, int idFacult)
     {
-        var list = Array.Empty<Groups>();
+        var list = new List<Groups>();
         var sql =
             $" select  G.id, G.NAME, G.KURS, G.GOD_OBR,  ST.NAME as LEVELS , FR.NAME as FORM , FF.NAME as FKNAME, SG.IS_BUDG, SG.N_ZACH , G.SPEC_ID , P.NAME as ORDER_NAME , P.DATE_CRT as DATE_ORDER , TP.NAME as TYPE_ORDER  " +
             $" from stud_gruppa SG  " +
@@ -195,7 +195,7 @@ public static class FirebirdService
             var typeOrder = (string)reader["IS_BUDG"] == "T" && reader.GetString(12) == "зачисление"
                 ? "зачисление на бюджетное место"
                 : "зачисление на контрактное место";
-            _ = list.Append(new Groups
+            list.Add(new Groups
             {
                 IdGroup = idGroup,
                 NameGroup = reader.GetString(1).Trim(),
@@ -308,7 +308,7 @@ public static class FirebirdService
     }
     public static async Task<IEnumerable<Students>> GetStudents(string idFak)
         {
-            var list = Array.Empty<Students>();
+            var list = new List<Students>();
 
             var sqlGrid =
                 " select " +
@@ -356,7 +356,7 @@ public static class FirebirdService
             {
                 var idStudent = reader.GetInt32(0);
 
-                list.Append(new Students
+                list.Add(new Students
                 {
                     IdStudent = idStudent,
                     FirstName = reader.GetString(2),

@@ -13,7 +13,7 @@ public class Move
     public string order { get; internal set; } = string.Empty;
 
     [JsonPropertyName("date_order")]
-    public string DateOrder { get; internal set; } = string.Empty;
+    public string? DateOrder { get; internal set; }
 
     [JsonPropertyName("type_order")]
     public string typeOrder { get; internal set; } = string.Empty;
@@ -29,11 +29,11 @@ public class Move
     [JsonPropertyName("contract")]
     public string Contract { get; internal set; } = string.Empty;
     [JsonPropertyName("date_start")]
-    public string dateBegin { get; internal set; } = string.Empty;
+    public string? dateBegin { get; internal set; } 
     [JsonPropertyName("date_end")]
-    public string dateEnd { get; internal set; } = string.Empty;
+    public string? dateEnd { get; internal set; } 
     [JsonPropertyName("date_drop")]
-    public string dateDrop { get; internal set; } = string.Empty;
+    public string? dateDrop { get; internal set; }
 
     [JsonPropertyName("day_holiday")]
     public int dayVacation { get; internal set; }
@@ -41,5 +41,5 @@ public class Move
     [JsonPropertyName("pers_id")]
     public int PersonId { get; internal set; }
     [JsonPropertyName("order_drop")]
-    public string orderDrop { get; internal set; } = string.Empty;
+    public string? orderDrop { get; internal set; }
 }
