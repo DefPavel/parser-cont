@@ -208,7 +208,7 @@ public static class FirebirdService
                 RecordBook = reader["N_ZACH"] != DBNull.Value ? reader.GetString(8) : "Не указано",// Зачетная книга
                 idSpecialty = reader.GetInt32(9), // Код специальности
                 orderName = reader["ORDER_NAME"] != DBNull.Value ? reader.GetString(10) : "Не указано",
-                orderDate = reader["DATE_ORDER"] != DBNull.Value ? reader.GetDateTime(11).ToShortDateString() : DateTime.MinValue.ToShortDateString(),
+                orderDate = reader["DATE_ORDER"] != DBNull.Value ? reader.GetDateTime(11).ToString("yyyy-MM-dd") : "2022-05-16",
                 orderType = typeOrder,
                 //Specialty = await GetSpesialties(idGroup)
             });
@@ -275,7 +275,7 @@ public static class FirebirdService
                 FirstName = reader.GetString(2),
                 MiddleName = reader.GetString(3),
                 LastName = reader.GetString(1),
-                Birthday = reader["D_BIRTH"] != DBNull.Value ? reader.GetDateTime(4).ToShortDateString() : "01.01.1970",
+                Birthday = reader["D_BIRTH"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : "2022-05-16",
                 Gender = (string)reader["IS_MALE"] == "T" ? "male" : "female",  // Авто замена данных,
                 Citizen = reader["CITIZEN"] != DBNull.Value ? ReplaceCitizen(reader.GetString(6)) : "Не указано",
                 Code = reader["IND_KOD"] != DBNull.Value ? reader.GetString(7) : "Не указано",
@@ -287,7 +287,7 @@ public static class FirebirdService
                 SerialPassport = reader["SER_PASP"] != DBNull.Value ? reader.GetString(13) : "Не указано",
                 NumberPassport = reader["N_PASP"] != DBNull.Value ? reader.GetString(14) : "Не указано",
                 OrganizationPassport = reader["KEM_VIDAN_PASP"] != DBNull.Value ? reader.GetString(15) : "Не указано",
-                DatePassport = reader["D_VIDACHI_PASP"] != DBNull.Value ? reader.GetDateTime(16).ToShortDateString() : "Не указано",
+                DatePassport = reader["D_VIDACHI_PASP"] != DBNull.Value ? reader.GetDateTime(16).ToString("yyyy-MM-dd") : "2022-05-16",
                 TypeDocument = reader["TIP_DOC"] != DBNull.Value ? reader.GetString(17).Replace(" ", "").ToString().Trim().ToLower() : "паспорт",
                 IsHostel = reader["IS_OBSHAGA"] != DBNull.Value && (reader.GetString(18) == "T"), // if == T = true else false
                 NeedHostel = reader["IS_TREB_OBSH"] != DBNull.Value && (reader.GetString(19) == "T"),
@@ -362,7 +362,7 @@ public static class FirebirdService
                     FirstName = reader.GetString(2),
                     MiddleName = reader.GetString(3),
                     LastName = reader.GetString(1),
-                    Birthday = reader["D_BIRTH"] != DBNull.Value ? reader.GetDateTime(4).ToShortDateString() : "01.01.1970",
+                    Birthday = reader["D_BIRTH"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : "2022-05-16",
                     Gender = (string)reader["IS_MALE"] == "T" ? "male" : "female",  // Авто замена данных,
                     Citizen = reader["CITIZEN"] != DBNull.Value ? ReplaceCitizen(reader.GetString(6)) : "Не указано",
                     Code = reader["IND_KOD"] != DBNull.Value ? reader.GetString(7) : "Не указано",
@@ -374,7 +374,7 @@ public static class FirebirdService
                     SerialPassport = reader["SER_PASP"] != DBNull.Value ? reader.GetString(13) : "Не указано",
                     NumberPassport = reader["N_PASP"] != DBNull.Value ? reader.GetString(14) : "Не указано",
                     OrganizationPassport = reader["KEM_VIDAN_PASP"] != DBNull.Value ? reader.GetString(15) : "Не указано",
-                    DatePassport = reader["D_VIDACHI_PASP"] != DBNull.Value ? reader.GetDateTime(16).ToShortDateString() : "Не указано",
+                    DatePassport = reader["D_VIDACHI_PASP"] != DBNull.Value ? reader.GetDateTime(16).ToString("yyyy-MM-dd") : "2022-05-16",
                     TypeDocument = reader["TIP_DOC"] != DBNull.Value ? reader.GetString(17).Replace(" ", "").ToString().Trim().ToLower() : "паспорт",
                     IsHostel = reader["IS_OBSHAGA"] != DBNull.Value && (reader.GetString(18) == "T"), // if == T = true else false
                     NeedHostel = reader["IS_TREB_OBSH"] != DBNull.Value && (reader.GetString(19) == "T"),
