@@ -20,7 +20,7 @@ public class AuthController : ControllerBase
     [HttpPost(Name = "LoginInJMU")]
     public async Task<User> Auth(string username = "1978" , string password = "root")
     {
-        using ClientApi client = new("http://jmu.api.lgpu.org");
+        using ClientApi client = new("http://localhost:8080");
 
         User user = new()
         {
