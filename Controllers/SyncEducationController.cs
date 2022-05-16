@@ -16,7 +16,7 @@ public class SyncEducationController : ControllerBase
             ArraySpecialty = await FirebirdService.GetNewSpecialty()
         };
         // Если запрос пустой
-        return globalArray.ArraySpecialty.Count == 0
+        return globalArray.ArraySpecialty.ToList().Count == 0
             ? new BadRequestResult()
             : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/specialty", token, globalArray);
     }
@@ -45,7 +45,7 @@ public class SyncEducationController : ControllerBase
         */
 
         // Если запрос пустой
-        return globalArray.ArrayStudent.Count == 0
+        return globalArray.ArrayStudent.ToList().Count == 0
            ? new BadRequestResult()
            : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/students", token, globalArray);
     }
@@ -57,17 +57,32 @@ public class SyncEducationController : ControllerBase
         using ClientApi client = new(Hosting);
 
         ArrayMarks globalArray = new();
-        List<NewGroups> newGroups = new();
+        var newGroups = new List<NewGroups>()
+        {
+            new()
+            {
+                Id = idCont,
+                IdCont = idCont,
+                ArrayStudents = await FirebirdService.GetStudentMarks(idCont),
+
+            }
+        };
         foreach (var item in newGroups)
         {
-            item.Id = idCont;
-            item.IdCont = idCont;
-            item.ArrayStudents = await FirebirdService.GetStudentMarks(item.IdCont);
-            // globalArray.Arrays = await FirebirdService.GetStudentMarks(item.IdCont);
-
-            // itemGroups.Add(item);
             globalArray.Arrays.Add(item);
         }
+        
+        await using var createStream = System.IO.File.Create(@"marks.json");
+        // Сериализация в UTF-8
+        Console.OutputEncoding = Encoding.UTF8;
+        JsonSerializerOptions options = new()
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true
+        };
+        
+        await JsonSerializer.SerializeAsync(createStream, globalArray, options);
+        
         return newGroups.Count == 0
            ? new BadRequestResult()
            : await client.PostAsyncByToken<ArrayMarks>(@"/api/sync/cont/marksToGroup", token, globalArray);

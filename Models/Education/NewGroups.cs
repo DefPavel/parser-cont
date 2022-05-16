@@ -8,6 +8,6 @@
         public int IdCont { get; set; } = 0;
 
         [JsonPropertyName("studentArr")]
-        public List<StudentOcenka>? ArrayStudents { get; set; }
+        public IEnumerable<StudentOcenka> ArrayStudents { get; set; } = Enumerable.Empty<StudentOcenka>();
     }
 }

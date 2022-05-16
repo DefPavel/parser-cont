@@ -2,7 +2,7 @@
 public class Move
 {
     [JsonPropertyName("date_crt")]
-    public string dateInsert { get; internal set; }
+    public string dateInsert { get; internal set; } = string.Empty;
 
     [JsonPropertyName("count_budget")]
     public decimal count_budget { get; internal set; }
@@ -10,30 +10,30 @@ public class Move
     public decimal count_nobudget { get; internal set; }
 
     [JsonPropertyName("order")]
-    public string order { get; internal set; }
+    public string order { get; internal set; } = string.Empty;
 
     [JsonPropertyName("date_order")]
-    public string DateOrder { get; internal set; }
+    public string DateOrder { get; internal set; } = string.Empty;
 
     [JsonPropertyName("type_order")]
-    public string typeOrder { get; internal set; }
+    public string typeOrder { get; internal set; } = string.Empty;
     [JsonPropertyName("name_dep")]
-    public string name_dep { get; internal set; }
+    public string name_dep { get; internal set; } = string.Empty;
     [JsonPropertyName("position")]
-    public string position { get; internal set; }
+    public string position { get; internal set; } = string.Empty;
     [JsonPropertyName("is_main")]
     public bool isMain { get; internal set; }
     
     [JsonPropertyName("is_ped")]
     public bool isPed { get; internal set; }
     [JsonPropertyName("contract")]
-    public string Contract { get; internal set; }
+    public string Contract { get; internal set; } = string.Empty;
     [JsonPropertyName("date_start")]
-    public string dateBegin { get; internal set; }
+    public string dateBegin { get; internal set; } = string.Empty;
     [JsonPropertyName("date_end")]
-    public string dateEnd { get; internal set; }
+    public string dateEnd { get; internal set; } = string.Empty;
     [JsonPropertyName("date_drop")]
-    public string dateDrop { get; internal set; }
+    public string dateDrop { get; internal set; } = string.Empty;
 
     [JsonPropertyName("day_holiday")]
     public int dayVacation { get; internal set; }
@@ -41,5 +41,5 @@ public class Move
     [JsonPropertyName("pers_id")]
     public int PersonId { get; internal set; }
     [JsonPropertyName("order_drop")]
-    public string? orderDrop { get; internal set; }
+    public string orderDrop { get; internal set; } = string.Empty;
 }

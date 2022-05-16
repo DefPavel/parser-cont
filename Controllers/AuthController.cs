@@ -6,6 +6,11 @@ namespace parser_cont.Controllers;
 [Route("[controller]")]
 public class AuthController : ControllerBase
 {
+    private readonly ILogger _logger;
+    public AuthController(ILogger<AuthController> logger)
+    {
+        _logger = logger;
+    }
     /// <summary>
     /// Post Login to JMU
     /// </summary>
@@ -24,7 +29,10 @@ public class AuthController : ControllerBase
             IdModules = ModulesProject.Education,
 
         };
+        _logger.LogInformation("Данные отправлены для авторизации");
+
         return await client.PostAsync<User>("api/auth", user);
+        
     }
 }
 

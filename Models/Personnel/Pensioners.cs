@@ -3,10 +3,10 @@
 public class Pensioners
 {
     [JsonPropertyName("document")]
-    public string Document { get; set; }
+    public string Document { get; set; } = string.Empty;
     [JsonPropertyName("date_document")]
-    public string DateDocument { get; set; }
+    public string DateDocument { get; set; } = string.Empty;
 
     [JsonPropertyName("type")]
-    public string TypeDocument { get; set; }
+    public string TypeDocument { get; set; } = string.Empty;
 }

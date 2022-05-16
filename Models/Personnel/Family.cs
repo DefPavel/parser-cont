@@ -2,9 +2,9 @@
 public class Family
 {
     [JsonPropertyName("fullname")]
-    public string FullName { get; set; }
+    public string FullName { get; set; } = string.Empty;
     [JsonPropertyName("type")]
-    public string Type { get; set; }
+    public string Type { get; set; } = string.Empty;
     [JsonPropertyName("description")]
-    public string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 }

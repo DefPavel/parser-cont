@@ -4,8 +4,8 @@ public class HistoryBook
     [JsonPropertyName("number_record")]
     public int numberRecord { get; internal set; }
     [JsonPropertyName("created_at")]
-    public string dateInsert { get; internal set; }
-    public string information { get; internal set; }
+    public string dateInsert { get; internal set; } = string.Empty;
+    public string information { get; internal set; } = string.Empty;
     [JsonPropertyName("is_over")]
     public bool isOver { get; internal set; }
     [JsonPropertyName("is_pedagogical")]
@@ -21,5 +21,5 @@ public class HistoryBook
     [JsonPropertyName("is_medical")]
     public bool isMedical { get; internal set; }
     [JsonPropertyName("order_name")]
-    public string orderName { get; internal set; }
+    public string orderName { get; internal set; } = string.Empty;
 }

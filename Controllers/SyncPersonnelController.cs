@@ -1,10 +1,17 @@
-﻿namespace parser_cont.Controllers;
+﻿using System.Diagnostics;
+
+namespace parser_cont.Controllers;
 
 [ApiController]
 [Route("[controller]/[action]")]
 public class SyncPersonnelController : ControllerBase
 {
+    private readonly ILogger _logger;
     private const string Hosting = "http://localhost:8080";
+    public SyncPersonnelController(ILogger<SyncPersonnelController> logger) 
+    {
+        _logger = logger; 
+    }
     /// <summary>
     /// Get Departments and Positions
     /// </summary>
@@ -15,11 +22,16 @@ public class SyncPersonnelController : ControllerBase
     public async Task<ActionResult<GlobalArray>> DepartmentAndPosition(string token)
     {
         using ClientApi client = new(Hosting);
+        Stopwatch stopWatch = new();
+        stopWatch.Start();
         GlobalArray globalArray = new()
         {
             ArrayDepartments = await FirebirdServicePersonnel.GetDepartment()
         };
-        return globalArray.ArrayDepartments.Count == 0
+        stopWatch.Stop();
+        TimeSpan ts = stopWatch.Elapsed;
+        _logger.LogInformation(message: $"Затраченно времени на коллекцию Отделов и должностей: (Часов:{ts.Hours};Минут:{ts.Minutes};Секунд:{ts.Seconds};)");
+        return globalArray.ArrayDepartments.ToList().Count == 0
            ? new BadRequestResult()
            : await client.PostAsyncByToken<GlobalArray>(@"api/pers/tree/sync", token, globalArray);
     }
@@ -34,12 +46,16 @@ public class SyncPersonnelController : ControllerBase
     public async Task<ActionResult<GlobalArray>> Persons(string token)
     {
         using ClientApi client = new(Hosting);
-
+        Stopwatch stopWatch = new();
+        stopWatch.Start();
         GlobalArray globalArray = new()
         {
             ArrayPersons = await FirebirdServicePersonnel.GetPersonsAsync()
         };
-        return globalArray.ArrayPersons.Count == 0
+        stopWatch.Stop();
+        TimeSpan ts = stopWatch.Elapsed;
+        _logger.LogInformation(message: $"Затраченно времени на коллекцию Сотрудников: (Часов:{ts.Hours};Минут:{ts.Minutes};Секунд:{ts.Seconds};)");
+        return globalArray.ArrayPersons.ToList().Count == 0
             ? new BadRequestResult()
             : await client.PostAsyncByToken<GlobalArray>(@"api/pers/person/sync", token, globalArray);
     }
@@ -59,7 +75,7 @@ public class SyncPersonnelController : ControllerBase
         {
             ArrayVacation = await FirebirdServicePersonnel.GetVacations()
         };
-        return globalArray.ArrayVacation.Count == 0
+        return globalArray.ArrayVacation.ToList().Count == 0
             ? new BadRequestResult()
             : await client.PostAsyncByToken<GlobalArray>(@"api/pers/vacation/sync", token, globalArray);
     }
@@ -78,7 +94,7 @@ public class SyncPersonnelController : ControllerBase
         {
             ArrayRewarding = await FirebirdServicePersonnel.GetRewarding()
         };
-        return globalArray.ArrayRewarding.Count == 0
+        return globalArray.ArrayRewarding.ToList().Count == 0
             ? new BadRequestResult()
             : await client.PostAsyncByToken<GlobalArray>(@"api/pers/rewarding/sync", token, globalArray);
     }
@@ -93,7 +109,7 @@ public class SyncPersonnelController : ControllerBase
             ArrayQualification = await FirebirdServicePersonnel.GetQualification()
         };
 
-        return globalArray.ArrayQualification.Count == 0
+        return globalArray.ArrayQualification.ToList().Count == 0
             ? new BadRequestResult()
             : await client.PostAsyncByToken<GlobalArray>(@"api/pers/qualification/sync", token, globalArray);
       
@@ -107,7 +123,7 @@ public class SyncPersonnelController : ControllerBase
         {
             ArrayAcademicTitle = await FirebirdServicePersonnel.GetUchZvanieList()
         };
-        return globalArray.ArrayAcademicTitle.Count == 0
+        return globalArray.ArrayAcademicTitle.ToList().Count == 0
             ? new BadRequestResult()
             : await client.PostAsyncByToken<GlobalArray>(@"api/pers/academicTitle/sync", token, globalArray);
     }
@@ -121,7 +137,7 @@ public class SyncPersonnelController : ControllerBase
         {
             ArrayDegrees = await FirebirdServicePersonnel.GetScientificDegrees()
         };
-        return globalArray.ArrayDegrees.Count == 0
+        return globalArray.ArrayDegrees.ToList().Count == 0
             ? new BadRequestResult()
             : await client.PostAsyncByToken<GlobalArray>(@"api/pers/scientific/sync", token, globalArray);
     }
@@ -136,7 +152,7 @@ public class SyncPersonnelController : ControllerBase
             ArrayMove = await FirebirdServicePersonnel.GetMovesAsync()
         };
 
-        return globalArray.ArrayMove.Count == 0
+        return globalArray.ArrayMove.ToList().Count == 0
             ? new BadRequestResult()
             : await client.PostAsyncByToken<GlobalArray>(@"api/pers/relocation/sync", token, globalArray);
     }
@@ -152,7 +168,7 @@ public class SyncPersonnelController : ControllerBase
         for (var i = 0; i < countPerson; i++)
         {
             globalArray.ArrayImage = await FirebirdServicePersonnel.GetPhoto(100, skip);
-            if (globalArray.ArrayImage.Count > 0)
+            if (globalArray.ArrayImage.ToList().Count > 0)
             {
                 await client.PostAsyncByToken<GlobalArray>(@"api/pers/person/sync/image", token, globalArray);
                 skip += 100;
@@ -178,7 +194,7 @@ public class SyncPersonnelController : ControllerBase
         {
             globalArray.ArrayDocuments = await FirebirdServicePersonnel.GetDocumentsAsync(25, skip);
 
-            if (globalArray.ArrayDocuments.Count > 0)
+            if (globalArray.ArrayDocuments.ToList().Count > 0)
             {
                 await client.PostAsyncByToken<GlobalArray>(@"api/pers/document/sync", token, globalArray);
                 skip += 100;

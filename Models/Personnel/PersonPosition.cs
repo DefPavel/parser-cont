@@ -3,20 +3,20 @@
 public class PersonPosition
 {
     [JsonPropertyName("position")]
-    public string Position { get; set; }
+    public string Position { get; set; } = string.Empty;
 
     [JsonPropertyName("department")]
-    public string Department { get; set; }
+    public string Department { get; set; } = string.Empty;
     [JsonPropertyName("order")]
-    public string Order { get; set; }
+    public string Order { get; set; } = string.Empty;
     [JsonPropertyName("date_order")]
-    public string DateOrder { get; set; }
+    public string DateOrder { get; set; } = string.Empty;
     [JsonPropertyName("type_order")]
-    public string TypeOrder { get; set; }
+    public string TypeOrder { get; set; } = string.Empty;
     [JsonPropertyName("contract")]
-    public string Contract { get; set; }
+    public string Contract { get; set; } = string.Empty;
     [JsonPropertyName("place")]
-    public string Place { get; set; }
+    public string Place { get; set; } = string.Empty;
     [JsonPropertyName("is_main")]
     public bool IsMain { get; set; }
     [JsonPropertyName("is_ped")]
@@ -31,11 +31,11 @@ public class PersonPosition
     [JsonPropertyName("is_pluralism_oter")]
     public bool IsPluralismOter { get; set; } // Внешний совместитель
     [JsonPropertyName("data_start_contract")]
-    public string? DateStartContract { get; set; }
+    public string DateStartContract { get; set; } = string.Empty;
     [JsonPropertyName("date_end_contract")]
-    public string? DateEndContract { get; set; }
+    public string DateEndContract { get; set; } = string.Empty;
     [JsonPropertyName("date_drop")]
-    public string? DateDrop { get; set; }
+    public string DateDrop { get; set; } = string.Empty;
     [JsonPropertyName("position_drop")]
-    public string? PositionDrop { get; set; }
+    public string PositionDrop { get; set; } = string.Empty;
 }

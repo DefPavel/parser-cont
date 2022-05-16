@@ -273,8 +273,8 @@ public static class FirebirdServicePersonnel
                 {
                     Name = reader.GetString(0),
                     Type = reader.GetString(1),
-                    DateBegin = reader["date_start"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : null,
-                    DateEnd = reader["date_finish"] != DBNull.Value ? reader.GetDateTime(3).ToString("yyyy-MM-dd") : null,
+                    DateBegin = reader["date_start"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : string.Empty,
+                    DateEnd = reader["date_finish"] != DBNull.Value ? reader.GetDateTime(3).ToString("yyyy-MM-dd") : string.Empty,
                 });
             }
             return list;
@@ -362,7 +362,7 @@ public static class FirebirdServicePersonnel
                 {
                     NameDocument = reader["num_doc"] != DBNull.Value ? reader.GetString(0) : "Не указано",
                     DateBegin = reader["DATE_BEGIN"] != DBNull.Value ? reader.GetDateTime(1).ToString("yyyy-MM-dd") : "1900-01-01",
-                    DateEnd = reader["DATE_END"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : null,
+                    DateEnd = reader["DATE_END"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : string.Empty,
                     ForLife = reader.GetString(3) == "T",
                     Group = reader["GROUPE"] != DBNull.Value ? reader.GetInt16(4) : 0
                 });
@@ -486,10 +486,10 @@ public static class FirebirdServicePersonnel
                     IsPluralismOter = reader.GetString(10) == "T", //Внешний совместитель
                     IsPluralismInner = (reader.GetString(7) == "F" && reader.GetString(10) == "F"), // Совместитель
                     IsPed = reader.GetString(11) == "T",
-                    DateStartContract = reader["date_kontr_nach"] != DBNull.Value ? reader.GetDateTime(12).ToString("yyyy-MM-dd") : null,
-                    DateEndContract = reader["date_kontr_kon"] != DBNull.Value ? reader.GetDateTime(13).ToString("yyyy-MM-dd") : null,
-                    DateDrop = reader["dat_drop"] != DBNull.Value ? reader.GetDateTime(14).ToString("yyyy-MM-dd") : null,
-                    PositionDrop = reader["dolj_uvoln"] != DBNull.Value ? reader.GetString(15) : null,
+                    DateStartContract = reader["date_kontr_nach"] != DBNull.Value ? reader.GetDateTime(12).ToString("yyyy-MM-dd") : string.Empty,
+                    DateEndContract = reader["date_kontr_kon"] != DBNull.Value ? reader.GetDateTime(13).ToString("yyyy-MM-dd") : string.Empty,
+                    DateDrop = reader["dat_drop"] != DBNull.Value ? reader.GetDateTime(14).ToString("yyyy-MM-dd") : string.Empty,
+                    PositionDrop = reader["dolj_uvoln"] != DBNull.Value ? reader.GetString(15) : string.Empty,
 
                 });
             }
@@ -524,8 +524,8 @@ public static class FirebirdServicePersonnel
                     Period = reader["period"] != DBNull.Value ? reader.GetString(1) : "Не указано",
                     Length = reader["dlina"] != DBNull.Value ? reader.GetInt32(2) : 0,
                     Ostatok = reader["ostatok"] != DBNull.Value ? reader.GetInt32(3) : 0,
-                    DateStart = reader["date_nach"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : null,
-                    DateEnd = reader["date_kon"] != DBNull.Value ? reader.GetDateTime(5).ToString("yyyy-MM-dd") : null,
+                    DateStart = reader["date_nach"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : string.Empty,
+                    DateEnd = reader["date_kon"] != DBNull.Value ? reader.GetDateTime(5).ToString("yyyy-MM-dd") : string.Empty,
                     OrderName = $"{reader.GetString(6)}(от {reader.GetDateTime(7).ToShortDateString()})",
                     DateOrder = reader.GetDateTime(7).ToString("yyyy-MM-dd"),
                     TypeVacation = reader.GetString(8),
@@ -625,10 +625,10 @@ public static class FirebirdServicePersonnel
                 {
                     PersonId = reader.GetInt32(0),
                     Name = reader.GetString(1),
-                    NumberDocument = reader["prim"] != DBNull.Value ? reader.GetString(2) : null,
-                    OrderName = reader["date_order"] != DBNull.Value ? $"{reader.GetString(3)}(от {reader.GetDateTime(4).ToShortDateString()})" : null,
-                    DateOrder = reader["date_order"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : null,
-                    DateIssuing = reader["date_issuing"] != DBNull.Value ? reader.GetDateTime(5).ToString("yyyy-MM-dd") : null,
+                    NumberDocument = reader["prim"] != DBNull.Value ? reader.GetString(2) : string.Empty,
+                    OrderName = reader["date_order"] != DBNull.Value ? $"{reader.GetString(3)}(от {reader.GetDateTime(4).ToShortDateString()})" : string.Empty,
+                    DateOrder = reader["date_order"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : string.Empty,
+                    DateIssuing = reader["date_issuing"] != DBNull.Value ? reader.GetDateTime(5).ToString("yyyy-MM-dd") : string.Empty,
                 });
 
             }
@@ -660,11 +660,11 @@ public static class FirebirdServicePersonnel
                     {
                         IdPerson = reader.GetInt32(0),
                         CourseName = reader.GetString(1),
-                        DateBegin = reader["date_nach"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : null,
-                        DateEnd = reader["date_kon"] != DBNull.Value ? reader.GetDateTime(3).ToString("yyyy-MM-dd") : null,
+                        DateBegin = reader["date_nach"] != DBNull.Value ? reader.GetDateTime(2).ToString("yyyy-MM-dd") : string.Empty,
+                        DateEnd = reader["date_kon"] != DBNull.Value ? reader.GetDateTime(3).ToString("yyyy-MM-dd") : string.Empty,
                         Place = reader["mesto_prohogd"] != DBNull.Value ? reader.GetString(4) : "Не указано",
                         NumberCertificate = reader["n_svid"] != DBNull.Value ? reader.GetString(5) : "Не указано",
-                        DateIssue = reader["date_vidachy"] != DBNull.Value ? reader.GetDateTime(6).ToString("yyyy-MM-dd") : null,
+                        DateIssue = reader["date_vidachy"] != DBNull.Value ? reader.GetDateTime(6).ToString("yyyy-MM-dd") : string.Empty,
                     });
                 }
             }
@@ -853,13 +853,13 @@ public static class FirebirdServicePersonnel
                     position = position,
                     isMain = reader.GetString(8) == "T",
                     Contract = reader["typ_dog"] != DBNull.Value ? reader.GetString(9) : "Не указано",
-                    dateBegin = reader["date_kontr_nach"] != DBNull.Value ? reader.GetDateTime(10).ToString("yyyy-MM-dd") : null,
-                    dateEnd = reader["date_kontr_kon"] != DBNull.Value ? reader.GetDateTime(11).ToString("yyyy-MM-dd") : null,
-                    dateDrop = reader["date_drop"] != DBNull.Value ? reader.GetDateTime(12).ToString("yyyy-MM-dd") : null,
+                    dateBegin = reader["date_kontr_nach"] != DBNull.Value ? reader.GetDateTime(10).ToString("yyyy-MM-dd") : string.Empty,
+                    dateEnd = reader["date_kontr_kon"] != DBNull.Value ? reader.GetDateTime(11).ToString("yyyy-MM-dd") : string.Empty,
+                    dateDrop = reader["date_drop"] != DBNull.Value ? reader.GetDateTime(12).ToString("yyyy-MM-dd") : string.Empty,
                     dayVacation = reader["OTP_DAYS"] != DBNull.Value ? reader.GetInt32(13) : 0,
-                    orderDrop = reader["prikaz_end"] != DBNull.Value ? reader.GetString(14).Replace("  ", " ") : null,
+                    orderDrop = reader["prikaz_end"] != DBNull.Value ? reader.GetString(14).Replace("  ", " ") : string.Empty,
                     PersonId = reader.GetInt32(15),
-                    DateOrder = reader["dcrt"] != DBNull.Value ? reader.GetDateTime(16).ToString("yyyy-MM-dd") : null,
+                    DateOrder = reader["dcrt"] != DBNull.Value ? reader.GetDateTime(16).ToString("yyyy-MM-dd") : string.Empty,
                     isPed =  await GetStatus(position),
 
                 });

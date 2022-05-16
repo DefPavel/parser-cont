@@ -5,6 +5,6 @@ public class StudentOcenka
     public int Id { get; set; }
 
     [JsonPropertyName("uchPlan")]
-    public List<Plan> Plans { get; set; } = new();
+    public IEnumerable<Plan> Plans { get; set; } = Enumerable.Empty<Plan>();
 }
 
