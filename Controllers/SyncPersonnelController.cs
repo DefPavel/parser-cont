@@ -29,7 +29,7 @@ public class SyncPersonnelController : ControllerBase
             ArrayDepartments = await FirebirdServicePersonnel.GetDepartment()
         };
         stopWatch.Stop();
-        TimeSpan ts = stopWatch.Elapsed;
+        var ts = stopWatch.Elapsed;
         _logger.LogInformation(message: $"Затраченно времени на коллекцию Отделов и должностей: (Часов:{ts.Hours};Минут:{ts.Minutes};Секунд:{ts.Seconds};)");
         return globalArray.ArrayDepartments.ToList().Count == 0
            ? new BadRequestResult()
@@ -53,7 +53,7 @@ public class SyncPersonnelController : ControllerBase
             ArrayPersons = await FirebirdServicePersonnel.GetPersonsAsync()
         };
         stopWatch.Stop();
-        TimeSpan ts = stopWatch.Elapsed;
+        var ts = stopWatch.Elapsed;
         _logger.LogInformation(message: $"Затраченно времени на коллекцию Сотрудников: (Часов:{ts.Hours};Минут:{ts.Minutes};Секунд:{ts.Seconds};)");
         return globalArray.ArrayPersons.ToList().Count == 0
             ? new BadRequestResult()

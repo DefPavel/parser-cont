@@ -1,6 +1,4 @@
 ﻿using FirebirdSql.Data.FirebirdClient;
-using parser_cont.Models.Education;
-
 namespace parser_cont.Services.Firebird;
 public static class FirebirdService
 {
@@ -64,9 +62,9 @@ public static class FirebirdService
         "" => throw new ArgumentException($"{nameof(input)} cannot be empty", nameof(input)),
         _ => string.Concat(input[0].ToString().ToUpper(), input.AsSpan(1))
     };
-    public static async Task<List<StudentOcenka>> GetStudentMarks(int groupId)
+    public static async Task<IEnumerable<StudentOcenka>> GetStudentMarks(int groupId)
     {
-        List<StudentOcenka> list = new();
+        var list = Array.Empty<StudentOcenka>();
         var sql =
             $" select s.id from student s inner join stud_gruppa sg on s.id = sg.stud_id  inner join gruppa g on g.id = sg.grup_id  where g.is_vip = 'F' and g.id = {groupId}";
         await using FbConnection connection = new(StringConnection);
@@ -76,7 +74,7 @@ public static class FirebirdService
         var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            list.Add(new StudentOcenka
+            list.Append(new StudentOcenka
             {
                 Id = reader.GetInt32(0),
                 Plans = await GetPlan(reader.GetInt32(0))
@@ -87,9 +85,9 @@ public static class FirebirdService
 
         return list;
     }
-    public static async Task<List<Plan>> GetPlan(int idStudent)
+    public static async Task<IEnumerable<Plan>> GetPlan(int idStudent)
     {
-        List<Plan> list = new();
+        var list = Array.Empty<Plan>();
         var sql =
             "select distinct up.name, up.semestr , up.typ , o.ball, o.ocenka, o.ocenka_ects " +
             "from student s " +
@@ -105,24 +103,24 @@ public static class FirebirdService
         var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            string ocenka;
+            string marks;
             if (reader.GetString(2).Trim() == "Z")
             {
                 if (reader.GetString(4) == "2" || reader.GetString(4) == "0")
-                    ocenka = "0";
+                    marks = "0";
                 else
-                    ocenka = "1";
+                    marks = "1";
             }
             else
-                ocenka = reader.GetString(4);
+                marks = reader.GetString(4);
 
-            list.Add(new Plan
+            _ = list.Append(new Plan
             {
                 SubjectName = reader["name"] != DBNull.Value ? reader.GetString(0).Trim() : "не указано",
                 Semester = reader["semestr"] != DBNull.Value ? reader.GetString(1) : "0",
                 FormControl = ReplaceOckenka(reader.GetString(2)),
                 Ball_100 = reader["ball"] != DBNull.Value ? reader.GetInt32(3) : 0,
-                Ball_5 = ocenka,
+                Ball_5 = marks,
                 Ball_ECTS = reader.GetString(5).Trim(),
             });
         }
@@ -131,9 +129,9 @@ public static class FirebirdService
 
         return list;
     }
-    public static async Task<List<Specialtys>> GetNewSpecialty()
+    public static async Task<IEnumerable<Specialtys>> GetNewSpecialty()
     {
-        List<Specialtys> list = new();
+        var list = Array.Empty<Specialtys>();
         const string sql = " select s.name as specialty ,s.id, s.nick,   s.min_id , s.prof_podg  , sl.name as st_level ,fo.name as fo_name, fak.name as fak_name" +
                            " from specialnost s"
                            + " inner join gruppa g on g.spec_id = s.id"
@@ -149,7 +147,7 @@ public static class FirebirdService
         var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            list.Add(new Specialtys
+            _ = list.Append(new Specialtys
             {
                 IdSpecialty = reader.GetInt32(1),
                 NameSpecialty = reader.GetString(0).ToLower().Trim(),
@@ -169,9 +167,9 @@ public static class FirebirdService
 
         return list;
     }
-    public static async Task<List<Groups>> GetGroups(int idStudent, int idFacult)
+    private static async Task<IEnumerable<Groups>> GetGroups(int idStudent, int idFacult)
     {
-        List<Groups> list = new();
+        var list = Array.Empty<Groups>();
         var sql =
             $" select  G.id, G.NAME, G.KURS, G.GOD_OBR,  ST.NAME as LEVELS , FR.NAME as FORM , FF.NAME as FKNAME, SG.IS_BUDG, SG.N_ZACH , G.SPEC_ID , P.NAME as ORDER_NAME , P.DATE_CRT as DATE_ORDER , TP.NAME as TYPE_ORDER  " +
             $" from stud_gruppa SG  " +
@@ -197,7 +195,7 @@ public static class FirebirdService
             var typeOrder = (string)reader["IS_BUDG"] == "T" && reader.GetString(12) == "зачисление"
                 ? "зачисление на бюджетное место"
                 : "зачисление на контрактное место";
-            list.Add(new Groups
+            _ = list.Append(new Groups
             {
                 IdGroup = idGroup,
                 NameGroup = reader.GetString(1).Trim(),
@@ -220,7 +218,7 @@ public static class FirebirdService
 
         return list;
     }
-    public static async Task<List<Students>> GetStudentsAll()
+    public static async Task<IEnumerable<Students>> GetStudentsAll()
     {
         List<Students> list = new();
 
@@ -308,9 +306,9 @@ public static class FirebirdService
 
         return list;
     }
-    public static async Task<List<Students>> GetStudents(string idFak)
+    public static async Task<IEnumerable<Students>> GetStudents(string idFak)
         {
-            List<Students> list = new();
+            var list = Array.Empty<Students>();
 
             var sqlGrid =
                 " select " +
@@ -358,7 +356,7 @@ public static class FirebirdService
             {
                 var idStudent = reader.GetInt32(0);
 
-                list.Add(new Students
+                list.Append(new Students
                 {
                     IdStudent = idStudent,
                     FirstName = reader.GetString(2),
@@ -381,7 +379,6 @@ public static class FirebirdService
                     IsHostel = reader["IS_OBSHAGA"] != DBNull.Value && (reader.GetString(18) == "T"), // if == T = true else false
                     NeedHostel = reader["IS_TREB_OBSH"] != DBNull.Value && (reader.GetString(19) == "T"),
                     BirthPlace = reader["MESTO_ROGD"] != DBNull.Value ? reader.GetString(20) : "Не указано",
-
                     // Записываем в группы
                     Groups = await GetGroups(idStudent, int.Parse(idFak)),
                     // 
@@ -395,7 +392,7 @@ public static class FirebirdService
 
             return list;
         }
-    public static async Task<List<OrganizationEducation>> GetEducation(int idStudent)
+    public static async Task<IEnumerable<OrganizationEducation>> GetEducation(int idStudent)
         {
             List<OrganizationEducation> list = new();
             var sqlGrid = $"select OBR_ZAV from DOP_OBUCH  where STUD_ID = {idStudent}";
@@ -417,7 +414,7 @@ public static class FirebirdService
 
             return list;
         }
-    public static async Task<List<Relatives>> GetRelatives(int idStudent)
+    public static async Task<IEnumerable<Relatives>> GetRelatives(int idStudent)
         {
             List<Relatives> list = new();
             var sql =
@@ -444,7 +441,7 @@ public static class FirebirdService
 
             return list;
         }
-    public static async Task<List<Spesialty>> GetSpesialties(int idGroup)
+    public static async Task<IEnumerable<Spesialty>> GetSpesialties(int idGroup)
     {
             List<Spesialty> list = new();
             var sql =

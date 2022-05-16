@@ -24,9 +24,9 @@ public class Students
     public bool NeedHostel { get; internal set; } = false;
 
     // Ссылка на группы
-    public List<Groups> Groups { get; set; } = new();
-    public List<OrganizationEducation> OrganizationEducation { get; internal set; } = new();
+    public IEnumerable<Groups> Groups { get; set; } = Enumerable.Empty<Groups>();
+    public IEnumerable<OrganizationEducation> OrganizationEducation { get; internal set; } = Enumerable.Empty<OrganizationEducation>();
     // Ссылка на Родство
-    public List<Relatives> Relatives { get; set; } = new();
+    public IEnumerable<Relatives> Relatives { get; set; } = Enumerable.Empty<Relatives>();
 }
 

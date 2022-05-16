@@ -1,10 +1,17 @@
-﻿namespace parser_cont.Controllers;
+﻿using System.Diagnostics;
+
+namespace parser_cont.Controllers;
 
 [ApiController]
 [Route("[controller]/[action]")]
 public class SyncEducationController : ControllerBase
 {
     private const string Hosting = "http://localhost:8080";
+    private readonly ILogger _logger;
+    public SyncEducationController(ILogger<SyncEducationController> logger)
+    {
+        _logger = logger;
+    }
 
     [Route("")]
     [HttpPost]
@@ -27,10 +34,15 @@ public class SyncEducationController : ControllerBase
     public async Task<ActionResult<ArrayStudents>> StudentByIdDepartment(string token, string idFaculty)
     {
         using ClientApi client = new(Hosting);
+        Stopwatch stopWatch = new();
+        stopWatch.Start();
         ArrayStudents globalArray = new()
         {
             ArrayStudent = await FirebirdService.GetStudents(idFaculty)
         };
+        stopWatch.Stop();
+        var ts = stopWatch.Elapsed;
+        _logger.LogInformation(message: $"(Затраченно времени на коллекцию Студентов idFaculty={idFaculty}) : (Часов:{ts.Hours};Минут:{ts.Minutes};Секунд:{ts.Seconds};)");
         // Сформировать json файл
         /*await using var createStream = System.IO.File.Create(@"students.json");
         // Сериализация в UTF-8
@@ -72,7 +84,7 @@ public class SyncEducationController : ControllerBase
             globalArray.Arrays.Add(item);
         }
         
-        await using var createStream = System.IO.File.Create(@"marks.json");
+        /*await using var createStream = System.IO.File.Create(@"marks.json");
         // Сериализация в UTF-8
         Console.OutputEncoding = Encoding.UTF8;
         JsonSerializerOptions options = new()
@@ -82,7 +94,7 @@ public class SyncEducationController : ControllerBase
         };
         
         await JsonSerializer.SerializeAsync(createStream, globalArray, options);
-        
+        */
         return newGroups.Count == 0
            ? new BadRequestResult()
            : await client.PostAsyncByToken<ArrayMarks>(@"/api/sync/cont/marksToGroup", token, globalArray);
