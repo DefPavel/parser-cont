@@ -31,6 +31,7 @@ public class SyncPersonnelController : ControllerBase
         stopWatch.Stop();
         var ts = stopWatch.Elapsed;
         _logger.LogInformation(message: $"Затраченно времени на коллекцию Отделов и должностей: (Часов:{ts.Hours};Минут:{ts.Minutes};Секунд:{ts.Seconds};)");
+        globalArray.ArrayDepartments.ToList();
         return globalArray.ArrayDepartments.ToList().Count == 0
            ? new BadRequestResult()
            : await client.PostAsyncByToken<GlobalArray>(@"api/pers/tree/sync", token, globalArray);

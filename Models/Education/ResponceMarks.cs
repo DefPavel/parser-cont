@@ -2,25 +2,19 @@
 {
     public class ResponceMarks
     {
-        [JsonPropertyName("error")]
-        public Error? Error { get; set; }
-
-        //[JsonPropertyName("addedSubjects")]
-        //public AddedSubjects? AddedSubjects { get; set; }
-
-        [JsonPropertyName("successCount")]
-        public int SuccessCount { get; set; }
+        public ResultMarks? resultMarks { get; set; }
+        public ResultSubject? resultSubject { get; set; }
     }
 
-    public class AddedSubjects
+    public class ResultMarks
     {
-        public int count { get; set; }
-        public List<string>? arr { get; set; }
+        public int added { get; set; }
+        public List<string>? error { get; set; }
     }
 
-    public class Error
+    public class ResultSubject
     {
-        public List<string>? errorMsg { get; set; }
-        public int errorCount { get; set; }
+        public int added { get; set; }
+        //public List<object> arr { get; set; }
     }
 }

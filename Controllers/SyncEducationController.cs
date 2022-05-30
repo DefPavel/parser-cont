@@ -6,7 +6,8 @@ namespace parser_cont.Controllers;
 [Route("[controller]/[action]")]
 public class SyncEducationController : ControllerBase
 {
-    private const string Hosting = "http://localhost:8080";
+    //http://jmu.api.lgpu.org
+    private const string Hosting = "http://jmu.api.lgpu.org";
     private readonly ILogger _logger;
     public SyncEducationController(ILogger<SyncEducationController> logger)
     {

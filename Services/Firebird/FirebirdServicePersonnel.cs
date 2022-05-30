@@ -57,7 +57,7 @@ public static class FirebirdServicePersonnel
         public static async Task<IEnumerable<Department>> GetDepartment()
         {
             var array = new List<Department>();
-            const string sql = $" select * from get_tree_root;";
+            const string sql = $" select * from get_tree_root";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -564,14 +564,16 @@ public static class FirebirdServicePersonnel
             await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sql, connection, transaction);
             await using var reader = await command.ExecuteReaderAsync();
+            int row = 0;
             while (await reader.ReadAsync())
             {
+                
                 list.Add(new Documents
                 {
                     IdPers = reader.GetInt32(0),
                     Type = reader.GetString(1),
                     Document = reader["doc"] != DBNull.Value ? reader["doc"] as byte[] : null,
-                    Name = reader.GetString(3),
+                    Name = $"{reader.GetString(3)}-{row++}",
 
                 });
                 await Task.Delay(100);
@@ -690,7 +692,7 @@ public static class FirebirdServicePersonnel
         public static async Task<IEnumerable<ScientificDegree>> GetScientificDegrees()
         {
             var list = new List<ScientificDegree>();
-            const string sql = $" select ns.sotr_id " +
+            const string sql = $" select distinct ns.sotr_id " +
                                ", ns.n_diploma" +
                                ", ns.date_vyd" +
                                ", ns.stepen_nick" +
