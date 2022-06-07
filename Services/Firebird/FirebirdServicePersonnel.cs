@@ -22,7 +22,7 @@ public static class FirebirdServicePersonnel
             // Array - 3 сек.
             var array = new List<Position>();
             var sql =
-                $" select distinct (D.NAME), D.IS_PED,D.OKLAD_B, D.OKLAD_NB,D.OTPUSK,D.KOLVO_B,D.KOLVO_NB,D.FREE_B,D.FREE_NB,D.PRIORITI_DOLJ,D.NAME_ROD  from DOLJNOST D where D.OTDEL_ID = {idDep}";
+                $" select distinct D.NAME, D.IS_PED,D.OKLAD_B, D.OKLAD_NB,D.OTPUSK,D.KOLVO_B,D.KOLVO_NB,D.FREE_B,D.FREE_NB,D.PRIORITI_DOLJ,D.NAME_ROD  from DOLJNOST D where D.OTDEL_ID = {idDep}";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -112,12 +112,36 @@ public static class FirebirdServicePersonnel
             await using var reader = await command.ExecuteReaderAsync();
             return reader.Read() ? reader.GetInt32(0) : 0;
         }
-        public static async Task<IEnumerable<Persons>> GetPersonsAsync(int first = 100 , int skip = 0)
+    public static async Task<int> GetCountDropPersons()
+    {
+        const string sql =
+            "select count (distinct s.id) from sotr s inner join sotr_doljn sd on s.id = sd.sotr_id  where sd.dolj_id = 0 ";
+
+        await using FbConnection connection = new(StringConnection);
+        connection.Open();
+        await using var transaction = await connection.BeginTransactionAsync();
+        await using FbCommand command = new(sql, connection, transaction);
+        await using var reader = await command.ExecuteReaderAsync();
+        return reader.Read() ? reader.GetInt32(0) : 0;
+    }
+    public static async Task<int> GetCountAllPersons()
+    {
+        const string sql =
+            "select count (distinct s.id) from sotr s inner join sotr_doljn sd on s.id = sd.sotr_id ";
+
+        await using FbConnection connection = new(StringConnection);
+        connection.Open();
+        await using var transaction = await connection.BeginTransactionAsync();
+        await using FbCommand command = new(sql, connection, transaction);
+        await using var reader = await command.ExecuteReaderAsync();
+        return reader.Read() ? reader.GetInt32(0) : 0;
+    }
+    public static async Task<IEnumerable<Persons>> GetPersonsAsync(int first = 100 , int skip = 0)
         {
             var array = new List<Persons>();
-            const string sql = "select" +
-                               // $" first {first} " +
-                               // $" skip {skip}" +
+            string sql = "select " +
+                               $" first {first} " +
+                               $" skip {skip}" +
                                " distinct " +
                                "s.famil ," + //0
                                "s.name ," +//1
@@ -150,7 +174,9 @@ public static class FirebirdServicePersonnel
                                "s.photo " +
                                "from sotr s " +
                                "inner join sotr_doljn sd on s.id = sd.sotr_id " +
-                               " where sd.dolj_id <> 0 " +
+                               " where s.pasp_n is not null and s.date_birth <> '12.02.2011 11:02:21'  " +
+                               // "and s.id = 5293 or s.id = 7390 " + 
+                               " and s.date_birth <> '12.02.2011 11:02:20' and s.id <> 5661 and s.id <> 5229 and s.id <> 4948 and s.id <> 4822 and s.id <> 3674 and s.id <> 4518 and s.id <> 75 and s.id <> 3981 and s.id <> 4154 and s.id <> 1955 and s.id <>2214 and s.id <> 5229 and s.id <> 4948 and s.id <> 226 and s.id <> 4576 and s.id <> 541 and s.id <> 573 and s.id <> 3520 and s.id <> 697 and s.id <> 4822 and s.id <> 990 and s.id <> 851 and s.id <> 953 and s.id <> 2672 and s.id <> 999 and s.id <> 1098 and s.id <> 1146 and s.id <> 1156 and s.id <> 1328 and s.id <> 1388 and s.id <> 1397 and s.id <> 2848 " + // Дубликаты 
                                "order by s.id desc";
 
             await using FbConnection connection = new(StringConnection);
@@ -399,7 +425,7 @@ public static class FirebirdServicePersonnel
         private static async Task<IEnumerable<Family>> GetFamiliesAsync(int idPers)
         {
             var list = new List<Family>();
-            var sql = "select f.typ , f.FIO , f.prim from FAMILY f where f.sotr_id = " + idPers;
+            var sql = "select f.typ , f.FIO , f.prim , f.DATE_BIRTH from FAMILY f where f.sotr_id = " + idPers;
             await using FbConnection connection = new(StringConnection);
             connection.Open();
             await using var transaction = await connection.BeginTransactionAsync();
@@ -413,6 +439,8 @@ public static class FirebirdServicePersonnel
                     Type = reader.GetString(0),
                     FullName = reader.GetString(1),
                     Description = reader["prim"] != DBNull.Value ? reader.GetString(2) : "Не указано",
+                    Birthday = reader["DATE_BIRTH"] != DBNull.Value ? reader.GetDateTime(3).ToString("yyyy-MM-dd") : null
+
                 });
             }
             return list;
@@ -497,15 +525,19 @@ public static class FirebirdServicePersonnel
 
         #region Список отпусков всех сотрудников
 
-        public static async Task<IEnumerable<Vacations>> GetVacations()
+        public static async Task<IEnumerable<Vacations>> GetVacations( int first = 1000 , int skip = 0)
         {
             var list = new List<Vacations>();
-            const string sql = " select distinct o.sotr_id , o.period , o.dlina ,o.ostatok, o.date_nach , o.date_kon,  p.name , p.date_crt , t.name as typ " +
+            string sql =
+                               " select " +
+                               $" first {first} " +
+                               $" skip {skip} " +
+                               "distinct o.sotr_id , o.period , o.dlina ,o.ostatok, o.date_nach , o.date_kon,  p.name , p.date_crt , t.name as typ " +
                                " from otpusk o " +
                                " inner join typ_otpusk t on o.typ_nick = t.nick " +
                                " inner join prikaz p on o.prikaz_id = p.id " +
                                " inner join sotr_doljn sd on o.SOTR_ID = sd.sotr_id " +
-                               " where sd.dolj_id <> 0" +
+                               " where sd.dolj_id = 0 " +
                                " order by o.sotr_id desc";
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -543,7 +575,9 @@ public static class FirebirdServicePersonnel
                                " inner join sotr_doljn sd on s.id = sd.sotr_id " +
                                " inner join sotr_document sdd on s.id = sdd.sotr_id " +
                                " inner join typ_sotr_doc td on sdd.typ = td.id " +
-                               " where sd.dolj_id <> 0 and sdd.name is not null ";
+                               // " where sd.dolj_id = 0 " +
+                               " where sd.dolj_id = 0 " +
+                               "and sdd.name is not null ";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -557,7 +591,10 @@ public static class FirebirdServicePersonnel
             var list = new List<Documents>();
             //string path = "D:\\documents\\";
             var sql =
-                $"select first {first} skip {skip} distinct s.id, td.name,  sdd.doc , sdd.name  from sotr s   inner join sotr_doljn sd on s.id = sd.sotr_id  inner join sotr_document sdd on s.id = sdd.sotr_id  inner join typ_sotr_doc td on sdd.typ = td.id  where sd.dolj_id <> 0 and sdd.name is not null and sdd.doc is not null  order by s.id desc ";
+                $"select first {first} skip {skip} distinct s.id, td.name,  sdd.doc , sdd.name  from sotr s   inner join sotr_doljn sd on s.id = sd.sotr_id  inner join sotr_document sdd on s.id = sdd.sotr_id  inner join typ_sotr_doc td on sdd.typ = td.id " +
+                // $" where sd.dolj_id = 0 " +
+                $" where sd.dolj_id = 0 " +
+                $" and sdd.name is not null and sdd.doc is not null  order by s.id desc ";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -593,7 +630,7 @@ public static class FirebirdServicePersonnel
                                " inner join sotr_doljn sd on s.id = sd.sotr_id " +
                                " inner join typ_nagrady tn on sn.nagrad_id = tn.id " +
                                " left join prikaz p on p.id = sn.prikaz_id " +
-                               " where sd.dolj_id <> 0" +
+                               //" where sd.dolj_id = 0 " +
                                "order by s.id desc";
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -625,7 +662,8 @@ public static class FirebirdServicePersonnel
                                " from sotr s " +
                                " inner join sotr_doljn sd on s.id = sd.sotr_id " +
                                " inner join kvalification kv on kv.sotr_id = s.id " +
-                               " where sd.dolj_id <> 0 and kv.kurs_name is not null  order by s.id desc ";
+                               // " where sd.dolj_id <> 0 " +
+                               "and kv.kurs_name is not null  order by s.id desc ";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -658,12 +696,13 @@ public static class FirebirdServicePersonnel
         {
             var list = new List<UchZvanie>();
 
-            const string sql = "select distinct s.id , tp.name, uz.kafedra , uz.date_prisv_zvan , uz.n_docum, uz.place_prisv_zvan " +
-                               "from sotr s " +
-                               " inner join sotr_doljn sd on s.id = sd.sotr_id " +
-                               " inner join uch_zvan uz on s.id = uz.sotr_id " +
-                               " inner join typ_zvan tp on uz.zvan_id = tp.id " +
-                               " where sd.dolj_id <> 0 ";
+        const string sql = "select distinct s.id , tp.name, uz.kafedra , uz.date_prisv_zvan , uz.n_docum, uz.place_prisv_zvan " +
+                           "from sotr s " +
+                           " inner join sotr_doljn sd on s.id = sd.sotr_id " +
+                           " inner join uch_zvan uz on s.id = uz.sotr_id " +
+                           " inner join typ_zvan tp on uz.zvan_id = tp.id ";
+                                //" where sd.dolj_id <> 0 ";
+                               // " where sd.dolj_id = 0 ";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -692,26 +731,27 @@ public static class FirebirdServicePersonnel
         public static async Task<IEnumerable<ScientificDegree>> GetScientificDegrees()
         {
             var list = new List<ScientificDegree>();
-            const string sql = $" select distinct ns.sotr_id " +
-                               ", ns.n_diploma" +
-                               ", ns.date_vyd" +
-                               ", ns.stepen_nick" +
-                               ", ns.nauk_otrasl" +
-                               ", ns.nauk_spec" +
-                               ", ns.tema_disert" +
-                               ", ns.place_prisv_zvan" +
-                               ", ns.city_prisv" +
-                               ", ns.jobs_after_asp" +
-                               ", ns.kol_scientific_work" +
-                               ", ns.kol_zayav_intelekt" +
-                               ", ns.change_text" +
-                               ", ns.comment" +
-                               " from sotr s " +
-                               " inner join sotr_doljn sd on s.id = sd.sotr_id " +
-                               " inner join NAUCH_STEPEN ns on ns.sotr_id = s.id " +
-                               " where sd.dolj_id <> 0 ";
+        const string sql = $" select distinct ns.sotr_id " +
+                           ", ns.n_diploma" +
+                           ", ns.date_vyd" +
+                           ", ns.stepen_nick" +
+                           ", ns.nauk_otrasl" +
+                           ", ns.nauk_spec" +
+                           ", ns.tema_disert" +
+                           ", ns.place_prisv_zvan" +
+                           ", ns.city_prisv" +
+                           ", ns.jobs_after_asp" +
+                           ", ns.kol_scientific_work" +
+                           ", ns.kol_zayav_intelekt" +
+                           ", ns.change_text" +
+                           ", ns.comment" +
+                           " from sotr s " +
+                           " inner join sotr_doljn sd on s.id = sd.sotr_id " +
+                           " inner join NAUCH_STEPEN ns on ns.sotr_id = s.id ";
+                               // " where sd.dolj_id <> 0 ";
+                               //" where sd.dolj_id = 0 ";
 
-            await using FbConnection connection = new(StringConnection);
+        await using FbConnection connection = new(StringConnection);
             connection.Open();
             await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sql, connection, transaction);
@@ -759,10 +799,13 @@ public static class FirebirdServicePersonnel
             await using var reader = await command.ExecuteReaderAsync();
             return await reader.ReadAsync() && reader.GetString(0) == "T";
         }
-        public static async Task<IEnumerable<Move>> GetMovesAsync()
+        public static async Task<IEnumerable<Move>> GetMovesAsync(int first = 1000 , int skip = 0)
         {
             var list = new List<Move>();
-            const string sql = "select distinct " +
+             string sql = "select" +
+                               $" first {first} " +
+                               $" skip {skip} " +
+                                " distinct " +
                                "sm.date_crt ," +
                                " p.name ," +
                                " p.typ ," +
@@ -784,7 +827,9 @@ public static class FirebirdServicePersonnel
                                + " inner join sotr_doljn sd on s.id = sd.sotr_id " +
                                " inner join  sotr_move sm on sm.sotr_id = s.id " +
                                " inner join prikaz p on p.id = sm.prikaz_id " +
-                               "  where sd.dolj_id <> 0 and sm.date_crt is not null and p.date_crt is not null" +
+                               " where sm.date_crt is not null and p.date_crt is not null " +
+                               " and sd.dolj_id = 0 " +
+                               " and sm.date_crt > '2014-01-01' " +
                                "  order by s.id desc ";
             //and sm.id <> 1192 and sm.id <> 2321 and sm.id <> 565 and sm.sotr_id <> 1459 and sm.sotr_id <> 1839
             await using FbConnection connection = new(StringConnection);
@@ -803,7 +848,7 @@ public static class FirebirdServicePersonnel
                     reader.GetString(2) == "den" ? "Денежная компенсация за неиспользованный отпуск" :
                     "";
 
-                var contract = reader["typ_dog"] != DBNull.Value ? FirstCharToUpper(reader.GetString(9)) : "Не указано";
+                var contract = reader["typ_dog"] != DBNull.Value ? reader.GetString(9) : "Не указано";
                 var dateCrt = reader["dcrt"] != DBNull.Value ? reader.GetDateTime(3).ToShortDateString() : "";
 
                 var position = reader["dolj_name"] != DBNull.Value ? reader.GetString(7) : "Не указано";
@@ -841,6 +886,7 @@ public static class FirebirdServicePersonnel
 
                 });
             }
+            //var t = list.Where(x => Convert.ToDateTime(x.dateInsert) > new DateTime(2014, 1, 1));
             return list;
 
         }
@@ -851,7 +897,9 @@ public static class FirebirdServicePersonnel
         {
             var list = new List<Image>();
             var sql =
-                $"select first {first} skip {skip} s.id, s.photo from sotr s inner join sotr_doljn sd on s.id = sd.sotr_id  where s.photo is not null and sd.dolj_id <> 0 order by s.id desc ";
+                $"select first {first} skip {skip} s.id, s.photo from sotr s inner join sotr_doljn sd on s.id = sd.sotr_id  where s.photo is not null " +
+                //$" and sd.dolj_id = 0 "
+                $"order by s.id desc ";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();

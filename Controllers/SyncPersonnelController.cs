@@ -6,8 +6,9 @@ namespace parser_cont.Controllers;
 [Route("[controller]/[action]")]
 public class SyncPersonnelController : ControllerBase
 {
+
     private readonly ILogger _logger;
-    private const string Hosting = "http://localhost:8080";
+    private const string Hosting = "http://jmu.api.lgpu.org";
     public SyncPersonnelController(ILogger<SyncPersonnelController> logger) 
     {
         _logger = logger; 
@@ -31,7 +32,7 @@ public class SyncPersonnelController : ControllerBase
         stopWatch.Stop();
         var ts = stopWatch.Elapsed;
         _logger.LogInformation(message: $"Затраченно времени на коллекцию Отделов и должностей: (Часов:{ts.Hours};Минут:{ts.Minutes};Секунд:{ts.Seconds};)");
-        globalArray.ArrayDepartments.ToList();
+        _ = globalArray.ArrayDepartments.ToList();
         return globalArray.ArrayDepartments.ToList().Count == 0
            ? new BadRequestResult()
            : await client.PostAsyncByToken<GlobalArray>(@"api/pers/tree/sync", token, globalArray);
@@ -47,7 +48,31 @@ public class SyncPersonnelController : ControllerBase
     public async Task<ActionResult<GlobalArray>> Persons(string token)
     {
         using ClientApi client = new(Hosting);
-        Stopwatch stopWatch = new();
+
+        var countPerson = await FirebirdServicePersonnel.GetCountAllPersons();
+        var skip = 0;
+        GlobalArray globalArray = new();
+        //Stopwatch stopWatch = new();
+        for (var i = 0; i < countPerson; i++)
+        {
+            globalArray.ArrayPersons = await FirebirdServicePersonnel.GetPersonsAsync(500, skip);
+            if (globalArray.ArrayPersons.ToList().Count > 0)
+            {
+                //stopWatch.Start();
+                await client.PostAsyncByToken<GlobalArray>(@"api/pers/person/sync", token, globalArray);
+                skip += 500;
+               // stopWatch.Stop();
+                //var ts = stopWatch.Elapsed;
+                _logger.LogInformation(message: $"Отправлено {skip}");
+            }
+            else
+            {
+                return new OkResult();
+            }
+        }
+        return new OkResult();
+
+        /*Stopwatch stopWatch = new();
         stopWatch.Start();
         GlobalArray globalArray = new()
         {
@@ -59,6 +84,7 @@ public class SyncPersonnelController : ControllerBase
         return globalArray.ArrayPersons.ToList().Count == 0
             ? new BadRequestResult()
             : await client.PostAsyncByToken<GlobalArray>(@"api/pers/person/sync", token, globalArray);
+        */
     }
 
     /// <summary>
@@ -71,14 +97,29 @@ public class SyncPersonnelController : ControllerBase
     public async Task<ActionResult<GlobalArray>> Vacations(string token)
     {
         using ClientApi client = new(Hosting);
-        
-        GlobalArray globalArray = new()
+        var skip = 0;
+        GlobalArray globalArray = new();
+
+        for (var i = 0; i < 50; i++)
         {
-            ArrayVacation = await FirebirdServicePersonnel.GetVacations()
-        };
-        return globalArray.ArrayVacation.ToList().Count == 0
-            ? new BadRequestResult()
-            : await client.PostAsyncByToken<GlobalArray>(@"api/pers/vacation/sync", token, globalArray);
+            globalArray.ArrayVacation = await FirebirdServicePersonnel.GetVacations(2000, skip);
+            if (globalArray.ArrayVacation.ToList().Count > 0)
+            {
+                await Task.Delay(500);
+                //stopWatch.Start();
+                await client.PostAsyncByToken<GlobalArray>(@"api/pers/vacation/sync", token, globalArray);
+                skip += 2000;
+                // stopWatch.Stop();
+                //var ts = stopWatch.Elapsed;
+                _logger.LogInformation(message: $"Отправлено {skip}");
+            }
+            else
+            {
+                return new OkResult();
+            }
+        }
+        return new OkResult();
+
     }
 
     /// <summary>
@@ -147,15 +188,32 @@ public class SyncPersonnelController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GlobalArray>> Moves(string token)
     {
+        var skip = 0;
         using ClientApi client = new(Hosting);
         GlobalArray globalArray = new()
         {
             ArrayMove = await FirebirdServicePersonnel.GetMovesAsync()
         };
 
-        return globalArray.ArrayMove.ToList().Count == 0
-            ? new BadRequestResult()
-            : await client.PostAsyncByToken<GlobalArray>(@"api/pers/relocation/sync", token, globalArray);
+        for (var i = 0; i < 20; i++)
+        {
+            globalArray.ArrayMove = await FirebirdServicePersonnel.GetMovesAsync(2000, skip);
+            if (globalArray.ArrayMove.ToList().Count > 0)
+            {
+                await Task.Delay(500);
+                //stopWatch.Start();
+                await client.PostAsyncByToken<GlobalArray>(@"api/pers/relocation/sync", token, globalArray);
+                skip += 2000;
+                // stopWatch.Stop();
+                //var ts = stopWatch.Elapsed;
+                _logger.LogInformation(message: $"Отправлено {skip}");
+            }
+            else
+            {
+                return new OkResult();
+            }
+        }
+        return new OkResult();
     }
 
     [Route("")]
@@ -193,12 +251,12 @@ public class SyncPersonnelController : ControllerBase
         
         for (var i = 0; i < countDocuments; i++)
         {
-            globalArray.ArrayDocuments = await FirebirdServicePersonnel.GetDocumentsAsync(25, skip);
+            globalArray.ArrayDocuments = await FirebirdServicePersonnel.GetDocumentsAsync(10, skip);
 
             if (globalArray.ArrayDocuments.ToList().Count > 0)
             {
                 await client.PostAsyncByToken<GlobalArray>(@"api/pers/document/sync", token, globalArray);
-                skip += 100;
+                skip += 10;
             }
             else
             {

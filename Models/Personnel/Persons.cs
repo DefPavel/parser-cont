@@ -40,7 +40,7 @@
         public string OrganiztionPassport { get; internal set; } = string.Empty;
     [JsonPropertyName("russion_passport")]
         public bool IsRusPassport { get; internal set; } 
-    [JsonPropertyName("is_marriage")]
+    [JsonPropertyName("marriage")]
         public bool IsMarriage { get; internal set; }
     [JsonPropertyName("is_student")]
         public bool IsStudent { get; internal set; } 

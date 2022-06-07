@@ -7,4 +7,7 @@ public class Family
     public string Type { get; set; } = string.Empty;
     [JsonPropertyName("description")]
     public string Description { get; set; } = string.Empty;
+
+    [JsonPropertyName("birthday")]
+    public string? Birthday { get; set; }
 }
