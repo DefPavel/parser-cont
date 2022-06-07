@@ -8,7 +8,7 @@ public class SyncPersonnelController : ControllerBase
 {
 
     private readonly ILogger _logger;
-    private const string Hosting = "http://jmu.api.lgpu.org";
+    private const string Hosting = "http://localhost:8080";
     public SyncPersonnelController(ILogger<SyncPersonnelController> logger) 
     {
         _logger = logger; 
