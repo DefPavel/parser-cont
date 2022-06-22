@@ -8,6 +8,6 @@ public class ChangeSurname
     public string Order { get; internal set; } = string.Empty ;
     [JsonPropertyName("type_order")]
     public string TypeOrder { get; internal set; } = string.Empty;
-    [JsonPropertyName("created_at")]
+    [JsonPropertyName("date_order")]
     public string DateOrder { get; internal set; } = string.Empty;
 }

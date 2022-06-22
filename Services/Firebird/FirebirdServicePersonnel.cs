@@ -171,7 +171,8 @@ public static class FirebirdServicePersonnel
                            "s.date_start_job," +
                            "s.FIO_DATEL  ," +
                            "s.id ," +
-                           "s.photo " +
+                           //"s.photo, " +
+                           "s.prim " +
                            "from sotr s " +
                            "inner join sotr_doljn sd on s.id = sd.sotr_id " +
                            " where  sd.dolj_id <> 0 " +
@@ -236,6 +237,7 @@ public static class FirebirdServicePersonnel
                     IsPreviosConvition = reader.GetString(24) == "T",// Справка о не судимости
                     DateToWorking = reader["date_start_job"] != DBNull.Value ? reader.GetDateTime(25).ToString("yyyy-MM-dd") : "1970-01-01",
                     Padeg = reader["FIO_DATEL"] != DBNull.Value ? reader.GetString(26) : "Не указано",
+                    description = reader["prim"] != DBNull.Value ? reader["prim"].ToString() : null,
                     ArrayPositions = await GetPersonPosition(reader.GetInt32(27)), // Должности
                     ArraySurname = await GetChangeSurname(reader.GetInt32(27)),// Смена фамилии
                     ArrayFamily = await GetFamiliesAsync(reader.GetInt32(27)), // Родственники
@@ -535,12 +537,12 @@ public static class FirebirdServicePersonnel
                                " select " +
                                $" first {first} " +
                                $" skip {skip} " +
-                               "distinct o.sotr_id , o.period , o.dlina ,o.ostatok, o.date_nach , o.date_kon,  p.name , p.date_crt , t.name as typ " +
+                               " distinct o.sotr_id , o.period , o.dlina ,o.ostatok, o.date_nach , o.date_kon,  p.name , p.date_crt , t.name as typ " +
                                " from otpusk o " +
                                " inner join typ_otpusk t on o.typ_nick = t.nick " +
                                " inner join prikaz p on o.prikaz_id = p.id " +
                                " inner join sotr_doljn sd on o.SOTR_ID = sd.sotr_id " +
-                               " where sd.dolj_id = 0 " +
+                               " where sd.dolj_id <> 0 " +
                                " order by o.sotr_id desc";
             await using FbConnection connection = new(StringConnection);
             connection.Open();

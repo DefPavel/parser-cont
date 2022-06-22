@@ -4,7 +4,9 @@
     {
         [JsonPropertyName("pers_id")]
         public int persId { get; internal set; }
-        //[JsonIgnore]
+        [JsonPropertyName("description")]
+        public string? description { get; internal set; }
+        [JsonIgnore]
         public string photo { get; internal set; } = string.Empty;
 
         [JsonPropertyName("date_to_working")]
