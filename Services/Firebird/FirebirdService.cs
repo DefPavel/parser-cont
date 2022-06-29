@@ -2,7 +2,7 @@
 namespace parser_cont.Services.Firebird;
 public static class FirebirdService
 {
-    private const string StringConnection = "database=192.168.250.72:Cont;user=sysdba;password=Vtlysq~Bcgjkby2020;Charset=win1251;";
+    private const string StringConnection = "database=10.0.0.23:Cont;user=sysdba;password=Vtlysq~Bcgjkby2020;Charset=win1251;";
     
     #region Main Service
 

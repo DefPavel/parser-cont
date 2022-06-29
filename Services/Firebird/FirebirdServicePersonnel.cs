@@ -4,7 +4,7 @@ namespace parser_cont.Services.Firebird;
 
 public static class FirebirdServicePersonnel
 {
-    private const string StringConnection = "database=192.168.250.72:Pers;user=sysdba;password=Vtlysq~Bcgjkby2020;Charset=win1251;";
+    private const string StringConnection = "database=10.0.0.23:Pers;user=sysdba;password=Vtlysq~Bcgjkby2020;Charset=win1251;";
         private static int _num;
         private static string FirstCharToUpper(this string input) => input switch
        {
@@ -175,10 +175,10 @@ public static class FirebirdServicePersonnel
                            "s.prim " +
                            "from sotr s " +
                            "inner join sotr_doljn sd on s.id = sd.sotr_id " +
-                           " where  sd.dolj_id <> 0 " +
-                               //" where s.pasp_n is not null and s.date_birth <> '12.02.2011 11:02:21'  " +
-                               // "and s.id = 5293 or s.id = 7390 " + 
-                               //" and s.date_birth <> '12.02.2011 11:02:20' and s.id <> 5661 and s.id <> 5229 and s.id <> 4948 and s.id <> 4822 and s.id <> 3674 and s.id <> 4518 and s.id <> 75 and s.id <> 3981 and s.id <> 4154 and s.id <> 1955 and s.id <>2214 and s.id <> 5229 and s.id <> 4948 and s.id <> 226 and s.id <> 4576 and s.id <> 541 and s.id <> 573 and s.id <> 3520 and s.id <> 697 and s.id <> 4822 and s.id <> 990 and s.id <> 851 and s.id <> 953 and s.id <> 2672 and s.id <> 999 and s.id <> 1098 and s.id <> 1146 and s.id <> 1156 and s.id <> 1328 and s.id <> 1388 and s.id <> 1397 and s.id <> 2848 " + // Дубликаты 
+                           //" where  sd.dolj_id <> 0 " +
+                               " where s.pasp_n is not null and s.date_birth <> '12.02.2011 11:02:21'  " +
+                               //" and s.id = 5293 or s.id = 7390 " + 
+                               " and s.date_birth <> '12.02.2011 11:02:20' and s.id <> 5661 and s.id <> 5229 and s.id <> 4948 and s.id <> 4822 and s.id <> 3674 and s.id <> 4518 and s.id <> 75 and s.id <> 3981 and s.id <> 4154 and s.id <> 1955 and s.id <>2214 and s.id <> 5229 and s.id <> 4948 and s.id <> 226 and s.id <> 4576 and s.id <> 541 and s.id <> 573 and s.id <> 3520 and s.id <> 697 and s.id <> 4822 and s.id <> 990 and s.id <> 851 and s.id <> 953 and s.id <> 2672 and s.id <> 999 and s.id <> 1098 and s.id <> 1146 and s.id <> 1156 and s.id <> 1328 and s.id <> 1388 and s.id <> 1397 and s.id <> 2848 " + // Дубликаты 
                                " order by s.id desc ";
 
             await using FbConnection connection = new(StringConnection);
@@ -351,7 +351,7 @@ public static class FirebirdServicePersonnel
         {
             var list = new List<Education>();
             var sql =
-                $"select distinct ed.uch_zav , ed.typ_obr , ed.spec , ed.kvalification , ed.date_vidachy ,ed.n_diploma , ed.is_osn from education ed where ed.date_vidachy is not null and ed.sotr_id = {idPerson}";
+                $"select distinct ed.uch_zav , ed.typ_obr , ed.spec , ed.kvalification , ed.date_vidachy ,ed.n_diploma , ed.is_osn from education ed where  ed.sotr_id = {idPerson}";
 
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -363,12 +363,12 @@ public static class FirebirdServicePersonnel
             {
                 list.Add(new Education
                 {
-                    institution = reader.GetString(0),
+                    institution = reader["uch_zav"] != DBNull.Value ? reader.GetString(0) : "Не указано",
                     type = reader.GetString(1),
-                    specialty = reader.GetString(2),
-                    qualification = reader.GetString(3),
+                    specialty = reader["spec"] != DBNull.Value ? reader.GetString(2) : "Не указано",
+                    qualification = reader["kvalification"] != DBNull.Value ? reader.GetString(3) : "Не указано",
                     date_issue = reader["date_vidachy"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : null,
-                    name_diplom = reader.GetString(5),
+                    name_diplom = reader["n_diploma"] != DBNull.Value ? reader.GetString(5) : "Не указано",
                     is_actual = reader.GetString(6) == "T"
                 });
             }
@@ -542,7 +542,7 @@ public static class FirebirdServicePersonnel
                                " inner join typ_otpusk t on o.typ_nick = t.nick " +
                                " inner join prikaz p on o.prikaz_id = p.id " +
                                " inner join sotr_doljn sd on o.SOTR_ID = sd.sotr_id " +
-                               " where sd.dolj_id <> 0 " +
+                               //" where sd.dolj_id <> 0 " +
                                " order by o.sotr_id desc";
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -598,7 +598,7 @@ public static class FirebirdServicePersonnel
             var sql =
                 $"select first {first} skip {skip} distinct s.id, td.name,  sdd.doc , sdd.name  from sotr s   inner join sotr_doljn sd on s.id = sd.sotr_id  inner join sotr_document sdd on s.id = sdd.sotr_id  inner join typ_sotr_doc td on sdd.typ = td.id " +
                 // $" where sd.dolj_id = 0 " +
-                $" where sd.dolj_id = 0 " +
+                $" where sd.dolj_id <> 0 " +
                 $" and sdd.name is not null and sdd.doc is not null  order by s.id desc ";
 
             await using FbConnection connection = new(StringConnection);
@@ -834,7 +834,7 @@ public static class FirebirdServicePersonnel
                                " inner join prikaz p on p.id = sm.prikaz_id " +
                                " where sm.date_crt is not null and p.date_crt is not null " +
                                " and sd.dolj_id = 0 " +
-                               " and sm.date_crt > '2014-01-01' " +
+                               " and sm.date_crt > '2014-01-01' and sm.id <> 1192 and sm.id <> 2321 and sm.id <> 565 and sm.sotr_id <> 1459 and sm.sotr_id <> 1839 " +
                                "  order by s.id desc ";
             //and sm.id <> 1192 and sm.id <> 2321 and sm.id <> 565 and sm.sotr_id <> 1459 and sm.sotr_id <> 1839
             await using FbConnection connection = new(StringConnection);
