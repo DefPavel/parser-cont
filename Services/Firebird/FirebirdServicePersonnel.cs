@@ -24,7 +24,7 @@ public static class FirebirdServicePersonnel
             var sql =
                 $" select distinct D.NAME, D.IS_PED,D.OKLAD_B, D.OKLAD_NB,D.OTPUSK,D.KOLVO_B,D.KOLVO_NB,D.FREE_B,D.FREE_NB,D.PRIORITI_DOLJ,D.NAME_ROD  from DOLJNOST D where D.OTDEL_ID = {idDep}";
 
-            await using FbConnection connection = new(StringConnection);
+        await using FbConnection connection = new(StringConnection);
             connection.Open();
             await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sql, connection, transaction);
@@ -137,7 +137,7 @@ public static class FirebirdServicePersonnel
         return reader.Read() ? reader.GetInt32(0) : 0;
     }
     public static async Task<IEnumerable<Persons>> GetPersonsAsync(int first = 100 , int skip = 0)
-        {
+    {
             var array = new List<Persons>();
         string sql = "select " +
                            $" first {first} " +
@@ -159,29 +159,29 @@ public static class FirebirdServicePersonnel
                            "s.pasp_organ ," +//13
                            "s.pasp_rus," + //14
                            "s.ROD_STAN," +//15
-                           "s.is_stud," +
-                           "s.is_aspirant," +
-                           "s.is_outher," +
-                           "s.is_doktor," +
-                           "s.is_rus_snils," +
-                           "s.mat_otv," +
-                           "s.MAT_ODINOCH," +
-                           "s.MAT_DVOIH," +
-                           "s.PREVIOUS_CONVICTION, " +
-                           "s.date_start_job," +
-                           "s.FIO_DATEL  ," +
-                           "s.id ," +
-                           //"s.photo, " +
+                           "s.is_stud," +//16
+                           "s.is_aspirant," +//17
+                           "s.is_outher," +//18
+                           "s.is_doktor," +//19
+                           "s.is_rus_snils," +//20
+                           "s.mat_otv," +//21
+                           "s.MAT_ODINOCH," +//22
+                           "s.MAT_DVOIH," +//23
+                           "s.PREVIOUS_CONVICTION, " +//24
+                           "s.date_start_job," +//25
+                           "s.FIO_DATEL  ," +//26
+                           "s.id ," +//27
+                                     //"s.photo, " +
                            "s.prim " +
                            "from sotr s " +
-                           "inner join sotr_doljn sd on s.id = sd.sotr_id " +
+                           " inner join sotr_doljn sd on s.id = sd.sotr_id " +
                            //" where  sd.dolj_id <> 0 " +
-                               " where s.pasp_n is not null and s.date_birth <> '12.02.2011 11:02:21'  " +
-                               //" and s.id = 5293 or s.id = 7390 " + 
-                               " and s.date_birth <> '12.02.2011 11:02:20' and s.id <> 5661 and s.id <> 5229 and s.id <> 4948 and s.id <> 4822 and s.id <> 3674 and s.id <> 4518 and s.id <> 75 and s.id <> 3981 and s.id <> 4154 and s.id <> 1955 and s.id <>2214 and s.id <> 5229 and s.id <> 4948 and s.id <> 226 and s.id <> 4576 and s.id <> 541 and s.id <> 573 and s.id <> 3520 and s.id <> 697 and s.id <> 4822 and s.id <> 990 and s.id <> 851 and s.id <> 953 and s.id <> 2672 and s.id <> 999 and s.id <> 1098 and s.id <> 1146 and s.id <> 1156 and s.id <> 1328 and s.id <> 1388 and s.id <> 1397 and s.id <> 2848 " + // Дубликаты 
-                               " order by s.id desc ";
+                              " where s.pasp_n is not null and s.date_birth <> '12.02.2011 11:02:21'  " +
+                           //" and s.id = 5547 " + 
+                             " and s.date_birth <> '12.02.2011 11:02:20' and s.id <> 5661 and s.id <> 5229 and s.id <> 4948 and s.id <> 4822 and s.id <> 3674 and s.id <> 4518 and s.id <> 75 and s.id <> 3981 and s.id <> 4154 and s.id <> 1955 and s.id <>2214 and s.id <> 5229 and s.id <> 4948 and s.id <> 226 and s.id <> 4576 and s.id <> 541 and s.id <> 573 and s.id <> 3520 and s.id <> 697 and s.id <> 4822 and s.id <> 990 and s.id <> 851 and s.id <> 953 and s.id <> 2672 and s.id <> 999 and s.id <> 1098 and s.id <> 1146 and s.id <> 1156 and s.id <> 1328 and s.id <> 1388 and s.id <> 1397 and s.id <> 2848 " + // Дубликаты 
+                             " order by s.id desc ";
 
-            await using FbConnection connection = new(StringConnection);
+        await using FbConnection connection = new(StringConnection);
             connection.Open();
             await using var transaction = await connection.BeginTransactionAsync();
             await using FbCommand command = new(sql, connection, transaction);
@@ -231,7 +231,7 @@ public static class FirebirdServicePersonnel
                     IsAspirant = reader.GetString(17) == "T",
                     IsDoctor = reader.GetString(19) == "T",
                     IsSnils = reader.GetString(20) == "T", // Снилс
-                    IsResponsible = reader.GetString(21) == "T", // Матереально отвест.
+                    IsResponsible = reader.GetString(21) == "True", // Матереально отвест.
                     IsSingleMother = reader.GetString(22) == "T",
                     IsTwoChildMother = reader.GetString(23) == "T",
                     IsPreviosConvition = reader.GetString(24) == "T",// Справка о не судимости
@@ -533,16 +533,17 @@ public static class FirebirdServicePersonnel
         public static async Task<IEnumerable<Vacations>> GetVacations( int first = 1000 , int skip = 0)
         {
             var list = new List<Vacations>();
-            string sql =
-                               " select " +
-                               $" first {first} " +
-                               $" skip {skip} " +
-                               " distinct o.sotr_id , o.period , o.dlina ,o.ostatok, o.date_nach , o.date_kon,  p.name , p.date_crt , t.name as typ " +
-                               " from otpusk o " +
-                               " inner join typ_otpusk t on o.typ_nick = t.nick " +
-                               " inner join prikaz p on o.prikaz_id = p.id " +
-                               " inner join sotr_doljn sd on o.SOTR_ID = sd.sotr_id " +
-                               //" where sd.dolj_id <> 0 " +
+        string sql =
+                           " select " +
+                           $" first {first} " +
+                           $" skip {skip} " +
+                           " distinct o.sotr_id , o.period , o.dlina ,o.ostatok, o.date_nach , o.date_kon,  p.name , p.date_crt , t.name as typ , o.description" +
+                           " from otpusk o " +
+                           " inner join typ_otpusk t on o.typ_nick = t.nick " +
+                           " left join prikaz p on o.prikaz_id = p.id " +
+                           " inner join sotr_doljn sd on o.SOTR_ID = sd.sotr_id " +
+
+                           // " where sd.dolj_id <> 0  and o.typ_nick = 'lik' " +
                                " order by o.sotr_id desc";
             await using FbConnection connection = new(StringConnection);
             connection.Open();
@@ -559,9 +560,10 @@ public static class FirebirdServicePersonnel
                     Ostatok = reader["ostatok"] != DBNull.Value ? reader.GetInt32(3) : 0,
                     DateStart = reader["date_nach"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : null,
                     DateEnd = reader["date_kon"] != DBNull.Value ? reader.GetDateTime(5).ToString("yyyy-MM-dd") : null,
-                    OrderName = $"{reader.GetString(6)}(от {reader.GetDateTime(7).ToShortDateString()})",
-                    DateOrder = reader.GetDateTime(7).ToString("yyyy-MM-dd"),
+                    OrderName = reader["name"] != DBNull.Value ? $"{reader.GetString(6)}(от {reader.GetDateTime(7).ToShortDateString()})" : null,
+                    DateOrder = reader["date_crt"] != DBNull.Value ?  reader.GetDateTime(7).ToString("yyyy-MM-dd") : DateTime.MinValue.ToString(),
                     TypeVacation = reader.GetString(8),
+                    Description = reader["description"] != DBNull.Value ? reader.GetString(9) : null
                 });
 
             }
@@ -580,8 +582,8 @@ public static class FirebirdServicePersonnel
                                " inner join sotr_doljn sd on s.id = sd.sotr_id " +
                                " inner join sotr_document sdd on s.id = sdd.sotr_id " +
                                " inner join typ_sotr_doc td on sdd.typ = td.id " +
-                               // " where sd.dolj_id = 0 " +
-                               " where sd.dolj_id = 0 " +
+                                " where sd.dolj_id = 0 " +
+                               //" where sd.dolj_id <> 0 " +
                                "and sdd.name is not null ";
 
             await using FbConnection connection = new(StringConnection);
@@ -597,8 +599,8 @@ public static class FirebirdServicePersonnel
             //string path = "D:\\documents\\";
             var sql =
                 $"select first {first} skip {skip} distinct s.id, td.name,  sdd.doc , sdd.name  from sotr s   inner join sotr_doljn sd on s.id = sd.sotr_id  inner join sotr_document sdd on s.id = sdd.sotr_id  inner join typ_sotr_doc td on sdd.typ = td.id " +
-                // $" where sd.dolj_id = 0 " +
-                $" where sd.dolj_id <> 0 " +
+                $" where sd.dolj_id = 0 " +
+                //$" where sd.dolj_id <> 0 " +
                 $" and sdd.name is not null and sdd.doc is not null  order by s.id desc ";
 
             await using FbConnection connection = new(StringConnection);
@@ -796,13 +798,21 @@ public static class FirebirdServicePersonnel
 
         private static async Task<bool> GetStatus(string namePosition)
         {
-            var sql = $" select first 1 is_ped from doljnost d  where d.name = '{namePosition.Trim()}'";
-            await using FbConnection connection = new(StringConnection);
-            connection.Open();
-            await using var transaction = await connection.BeginTransactionAsync();
-            await using FbCommand command = new(sql, connection, transaction);
-            await using var reader = await command.ExecuteReaderAsync();
-            return await reader.ReadAsync() && reader.GetString(0) == "T";
+            try
+            {
+                var sql = $" select first 1 is_ped from doljnost d  where d.name = '{namePosition.Trim()}'";
+                await using FbConnection connection = new(StringConnection);
+                connection.Open();
+                await using var transaction = await connection.BeginTransactionAsync();
+                await using FbCommand command = new(sql, connection, transaction);
+                await using var reader = await command.ExecuteReaderAsync();
+                return await reader.ReadAsync() && reader.GetString(0) == "T";
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
         }
         public static async Task<IEnumerable<Move>> GetMovesAsync(int first = 1000 , int skip = 0)
         {
@@ -833,9 +843,9 @@ public static class FirebirdServicePersonnel
                                " inner join  sotr_move sm on sm.sotr_id = s.id " +
                                " inner join prikaz p on p.id = sm.prikaz_id " +
                                " where sm.date_crt is not null and p.date_crt is not null " +
-                               " and sd.dolj_id = 0 " +
-                               " and sm.date_crt > '2014-01-01' and sm.id <> 1192 and sm.id <> 2321 and sm.id <> 565 and sm.sotr_id <> 1459 and sm.sotr_id <> 1839 " +
-                               "  order by s.id desc ";
+                               //" and sd.dolj_id <> 0 " +
+                               "  and sm.id <> 1192 and sm.id <> 2321 and sm.id <> 565 and sm.sotr_id <> 1459 and sm.sotr_id <> 1839 " +
+                               "  order by sm.date_crt desc ";
             //and sm.id <> 1192 and sm.id <> 2321 and sm.id <> 565 and sm.sotr_id <> 1459 and sm.sotr_id <> 1839
             await using FbConnection connection = new(StringConnection);
             connection.Open();
