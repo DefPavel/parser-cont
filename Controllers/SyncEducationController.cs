@@ -31,7 +31,39 @@ public class SyncEducationController : ControllerBase
 
     [Route("")]
     [HttpPost]
+    public async Task<ActionResult<ArrayStudents>> StudentByIdGroup(string token, string idGroup)
+    {
+        using ClientApi client = new(Hosting);
+        Stopwatch stopWatch = new();
+        stopWatch.Start();
+        ArrayStudents globalArray = new()
+        {
+            ArrayStudent = await FirebirdService.GetStudentByGroup(idGroup)
+        };
+        stopWatch.Stop();
+        var ts = stopWatch.Elapsed;
+        _logger.LogInformation(message: $"(Затраченно времени на коллекцию Студентов idGroup={idGroup}) : (Часов:{ts.Hours};Минут:{ts.Minutes};Секунд:{ts.Seconds};)");
+        // Сформировать json файл
+        /*await using var createStream = System.IO.File.Create(@"students.json");
+        // Сериализация в UTF-8
+        Console.OutputEncoding = Encoding.UTF8;
+        JsonSerializerOptions options = new()
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = true
+        };
+        
+        await JsonSerializer.SerializeAsync(createStream, globalArray, options);
+        */
 
+        // Если запрос пустой
+        return globalArray.ArrayStudent.ToList().Count == 0
+           ? new BadRequestResult()
+           : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/students", token, globalArray);
+    }
+
+    [Route("")]
+    [HttpPost]
     public async Task<ActionResult<ArrayStudents>> StudentByIdDepartment(string token, string idFaculty)
     {
         using ClientApi client = new(Hosting);

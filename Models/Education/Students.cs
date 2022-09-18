@@ -23,8 +23,16 @@ public class Students
     public bool IsHostel { get; internal set; } = false;
     public bool NeedHostel { get; internal set; } = false;
 
+    public string IsBudget { get; internal set; } = string.Empty;
+
+    public string orderName { get; internal set; } = string.Empty;
+    public string? orderDate { get; internal set; }
+
+    public IEnumerable<Orders> Orders { get; set; } = Enumerable.Empty<Orders>();
     // Ссылка на группы
+    [JsonIgnore]
     public IEnumerable<Groups> Groups { get; set; } = Enumerable.Empty<Groups>();
+    [JsonIgnore]
     public IEnumerable<OrganizationEducation> OrganizationEducation { get; internal set; } = Enumerable.Empty<OrganizationEducation>();
     // Ссылка на Родство
     public IEnumerable<Relatives> Relatives { get; set; } = Enumerable.Empty<Relatives>();

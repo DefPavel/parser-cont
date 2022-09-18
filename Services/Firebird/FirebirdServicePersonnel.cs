@@ -177,8 +177,8 @@ public static class FirebirdServicePersonnel
                            " inner join sotr_doljn sd on s.id = sd.sotr_id " +
                            //" where  sd.dolj_id <> 0 " +
                               " where s.pasp_n is not null and s.date_birth <> '12.02.2011 11:02:21'  " +
-                           //" and s.id = 5547 " + 
-                             " and s.date_birth <> '12.02.2011 11:02:20' and s.id <> 5661 and s.id <> 5229 and s.id <> 4948 and s.id <> 4822 and s.id <> 3674 and s.id <> 4518 and s.id <> 75 and s.id <> 3981 and s.id <> 4154 and s.id <> 1955 and s.id <>2214 and s.id <> 5229 and s.id <> 4948 and s.id <> 226 and s.id <> 4576 and s.id <> 541 and s.id <> 573 and s.id <> 3520 and s.id <> 697 and s.id <> 4822 and s.id <> 990 and s.id <> 851 and s.id <> 953 and s.id <> 2672 and s.id <> 999 and s.id <> 1098 and s.id <> 1146 and s.id <> 1156 and s.id <> 1328 and s.id <> 1388 and s.id <> 1397 and s.id <> 2848 " + // Дубликаты 
+                             //" and s.id = 5547 " + 
+                             " and s.date_birth <> '12.02.2011 11:02:20' and s.id <> 5661 and s.id <> 5229 and s.id <> 4948 and s.id <> 4822 and s.id <> 3674 and s.id <> 4518 and s.id <> 75 and s.id <> 3981 and s.id <> 4154 and s.id <> 1955 and s.id <>2214 and s.id <> 5229 and s.id <> 4948 and s.id <> 226 and s.id <> 4576 and s.id <> 541 and s.id <> 573 and s.id <> 3520 and s.id <> 697 and s.id <> 4822 and s.id <> 990 and s.id <> 851 and s.id <> 953 and s.id <> 2672 and s.id <> 999 and s.id <> 1098 and s.id <> 1146 and s.id <> 1156 and s.id <> 1328 and s.id <> 1388 and s.id <> 1397 and s.id <> 2848 and s.id <> 1508 " + // Дубликаты 
                              " order by s.id desc ";
 
         await using FbConnection connection = new(StringConnection);
@@ -599,8 +599,8 @@ public static class FirebirdServicePersonnel
             //string path = "D:\\documents\\";
             var sql =
                 $"select first {first} skip {skip} distinct s.id, td.name,  sdd.doc , sdd.name  from sotr s   inner join sotr_doljn sd on s.id = sd.sotr_id  inner join sotr_document sdd on s.id = sdd.sotr_id  inner join typ_sotr_doc td on sdd.typ = td.id " +
-                $" where sd.dolj_id = 0 " +
-                //$" where sd.dolj_id <> 0 " +
+                // $" where sd.dolj_id = 0 " +
+                $" where sd.dolj_id <> 0 " +
                 $" and sdd.name is not null and sdd.doc is not null  order by s.id desc ";
 
             await using FbConnection connection = new(StringConnection);

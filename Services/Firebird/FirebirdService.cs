@@ -2,7 +2,7 @@
 namespace parser_cont.Services.Firebird;
 public static class FirebirdService
 {
-    private const string StringConnection = "database=10.0.0.23:Cont;user=sysdba;password=Vtlysq~Bcgjkby2020;Charset=win1251;";
+    private const string StringConnection = "database=192.168.250.72:Cont;user=sysdba;password=Vtlysq~Bcgjkby2020;Charset=win1251;";
     
     #region Main Service
 
@@ -167,6 +167,43 @@ public static class FirebirdService
 
         return list;
     }
+    private static async Task<IEnumerable<Orders>> GetOrders(int idGroup , int idStudent)
+    {
+        var list = new List<Orders>();
+        var sql =
+            $" select p.id, p.name , p.date_crt , tp.name as type_name " +
+            $" from  stud_prikaz sp " +
+            $" inner join prikaz p on p.id = sp.prikaz_id  " +
+            $" inner join typ_prikaz tp on tp.id = p.typ  " +
+            $" where sp.grup_id = {idGroup} and sp.stud_id = {idStudent} ";
+
+        await using FbConnection connection = new(StringConnection);
+        connection.Open();
+        await using var transaction = await connection.BeginTransactionAsync();
+        await using FbCommand command = new(sql, connection, transaction);
+        var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+
+            /*var budget = (string)reader["IS_BUDG"] == "T" && reader.GetString(1) == "зачисление"
+                ? "зачисление на бюджетное место"
+                : "зачисление на контрактное место";
+            */
+
+            list.Add(new Orders
+            {
+                id = reader["id"] != DBNull.Value ? reader.GetInt32(0) : 0 ,
+                name = reader["name"] != DBNull.Value ? reader.GetString(1) : "",
+                date = reader["date_crt"] != DBNull.Value ? reader.GetDateTime(2).ToString("dd.MM.yyyy") : null,
+                type = reader["type_name"] != DBNull.Value ? reader.GetString(3) : ""
+
+            }) ;
+        }
+
+        await reader.CloseAsync();
+
+        return list;
+    }
     private static async Task<IEnumerable<Groups>> GetGroups(int idStudent, int idFacult)
     {
         var list = new List<Groups>();
@@ -301,6 +338,104 @@ public static class FirebirdService
                 Relatives = await GetRelatives(idStudent)
 
             });
+        }
+        await reader.CloseAsync();
+
+        return list;
+    }
+
+    public static async Task<IEnumerable<Students>> GetStudentByGroup(string idGroup)
+    {
+        var list = new List<Students>();
+
+        var sqlGrid =
+            " select " +
+            " distinct " +
+            " S.id," + //0
+            " S.FAMIL," +//1
+            " S.NAME," +//2
+            " S.OTCH," +//3
+            " S.D_BIRTH," +//4
+            " S.IS_MALE," +//5
+            " S.CITIZEN," +//6
+            " S.IND_KOD," +//7
+            " S.TEL_DOM," +//8
+            " S.TEL_MOB," +//9
+            " S.TEL_THIRD," +//10
+            " S.ADRES_PR," +//11
+            " S.ADRES_F," +//12
+            " S.SER_PASP," +//13
+            " S.N_PASP," +//14
+            " S.KEM_VIDAN_PASP," + //15
+            " S.D_VIDACHI_PASP," +//16
+            " S.TIP_DOC," +//17
+            " S.IS_OBSHAGA," +//18
+            " S.IS_TREB_OBSH," +//19
+                                //  " S.ABID," +//20
+                                //   " DOP.OBR_ZAV," +//20
+                                //   " SG.GRUP_ID as GroupId, " +
+                                //   " G.NAME as GROUPNAME, " +
+                                //   " SG.god_post," +
+                                //   " SG.IS_BUDG," +
+                                //   " SG.N_ZACH, " +
+            " S.MESTO_ROGD, " + //21
+            " sg.is_budg, " +
+            " p.name as prikaz_name, " +
+            " p.date_crt as date_prikaz " +
+            " from STUDENT S " +
+            " inner join stud_gruppa SG on SG.stud_id = S.id " +
+            " inner join gruppa G on SG.GRUP_ID = G.id " +
+            " inner join prikaz p on p.id = SG.prikaz_id " +
+            $" where G.id = {idGroup} and G.IS_VIP = 'F' " +
+            " order by S.FAMIL asc";
+
+        await using FbConnection connection = new(StringConnection);
+        connection.Open();
+        await using var transaction = await connection.BeginTransactionAsync();
+        await using FbCommand command = new(sqlGrid, connection, transaction);
+        var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            var idStudent = reader.GetInt32(0);
+            var budget = (string)reader["IS_BUDG"] == "T" 
+                ? "зачисление на бюджетное место"
+                : "зачисление на контрактное место";
+
+            list.Add(new Students
+            {
+                IdStudent = idStudent,
+                FirstName = reader.GetString(2),
+                MiddleName = reader.GetString(3),
+                LastName = reader.GetString(1),
+                Birthday = reader["D_BIRTH"] != DBNull.Value ? reader.GetDateTime(4).ToString("yyyy-MM-dd") : "2022-05-16",
+                Gender = (string)reader["IS_MALE"] == "T" ? "male" : "female",  // Авто замена данных,
+                Citizen = reader["CITIZEN"] != DBNull.Value ? ReplaceCitizen(reader.GetString(6)) : "Не указано",
+                Code = reader["IND_KOD"] != DBNull.Value ? reader.GetString(7) : "Не указано",
+                FirstPhone = reader["TEL_DOM"] != DBNull.Value ? reader.GetString(8) : "Не указано",
+                SecondPhone = reader["TEL_MOB"] != DBNull.Value ? reader.GetString(9) : "Не указано",
+                ThirdPhone = reader["TEL_THIRD"] != DBNull.Value ? reader.GetString(10) : "Не указано",
+                AdressRegistration = reader["ADRES_PR"] != DBNull.Value ? reader.GetString(11).Trim() : "Не указано", // Прописка
+                AdressActual = reader["ADRES_F"] != DBNull.Value ? reader.GetString(12) : "Не указано",
+                SerialPassport = reader["SER_PASP"] != DBNull.Value ? reader.GetString(13) : "Не указано",
+                NumberPassport = reader["N_PASP"] != DBNull.Value ? reader.GetString(14) : "Не указано",
+                OrganizationPassport = reader["KEM_VIDAN_PASP"] != DBNull.Value ? reader.GetString(15) : "Не указано",
+                DatePassport = reader["D_VIDACHI_PASP"] != DBNull.Value ? reader.GetDateTime(16).ToString("yyyy-MM-dd") : "2022-05-16",
+                TypeDocument = reader["TIP_DOC"] != DBNull.Value ? reader.GetString(17).Replace(" ", "").ToString().Trim().ToLower() : "паспорт",
+                IsHostel = reader["IS_OBSHAGA"] != DBNull.Value && (reader.GetString(18) == "T"), // if == T = true else false
+                NeedHostel = reader["IS_TREB_OBSH"] != DBNull.Value && (reader.GetString(19) == "T"),
+                BirthPlace = reader["MESTO_ROGD"] != DBNull.Value ? reader.GetString(20) : "Не указано",
+                IsBudget = budget,
+                orderName = reader["prikaz_name"] != DBNull.Value ? reader.GetString(22) : "Не указано",
+                 orderDate = reader["date_prikaz"] != DBNull.Value ? reader.GetDateTime(23).ToString("dd.MM.yyyy") : null,
+                Orders = await GetOrders(int.Parse(idGroup), idStudent),
+                // Записываем в группы
+                //Groups = await GetGroups(idStudent, int.Parse(idGroup)),
+                // 
+                // OrganizationEducation = await GetEducation(idStudent),
+                // Родители
+                Relatives = await GetRelatives(idStudent)
+
+            }); 
         }
         await reader.CloseAsync();
 
