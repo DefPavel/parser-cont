@@ -23,6 +23,7 @@ public class Students
     public bool IsHostel { get; internal set; } = false;
     public bool NeedHostel { get; internal set; } = false;
 
+    public string RecordBook { get; internal set; } = string.Empty;
     public string IsBudget { get; internal set; } = string.Empty;
 
     public string orderName { get; internal set; } = string.Empty;

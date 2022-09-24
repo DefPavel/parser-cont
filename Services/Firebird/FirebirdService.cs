@@ -381,7 +381,8 @@ public static class FirebirdService
             " S.MESTO_ROGD, " + //21
             " sg.is_budg, " +
             " p.name as prikaz_name, " +
-            " p.date_crt as date_prikaz " +
+            " p.date_crt as date_prikaz, " +
+            " SG.N_ZACH " +
             " from STUDENT S " +
             " inner join stud_gruppa SG on SG.stud_id = S.id " +
             " inner join gruppa G on SG.GRUP_ID = G.id " +
@@ -426,7 +427,8 @@ public static class FirebirdService
                 BirthPlace = reader["MESTO_ROGD"] != DBNull.Value ? reader.GetString(20) : "Не указано",
                 IsBudget = budget,
                 orderName = reader["prikaz_name"] != DBNull.Value ? reader.GetString(22) : "Не указано",
-                 orderDate = reader["date_prikaz"] != DBNull.Value ? reader.GetDateTime(23).ToString("dd.MM.yyyy") : null,
+                orderDate = reader["date_prikaz"] != DBNull.Value ? reader.GetDateTime(23).ToString("dd.MM.yyyy") : null,
+                RecordBook = reader["N_ZACH"] != DBNull.Value ? reader.GetString(24) : string.Empty,
                 Orders = await GetOrders(int.Parse(idGroup), idStudent),
                 // Записываем в группы
                 //Groups = await GetGroups(idStudent, int.Parse(idGroup)),
