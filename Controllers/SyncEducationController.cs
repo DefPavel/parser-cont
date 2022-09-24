@@ -31,7 +31,7 @@ public class SyncEducationController : ControllerBase
 
     [Route("")]
     [HttpPost]
-    public async Task<ActionResult<ArrayStudents>> StudentByIdGroup(string token, string idGroup)
+    public async Task<IEnumerable<Students>> StudentByIdGroup(string idGroup)
     {
         using ClientApi client = new(Hosting);
         Stopwatch stopWatch = new();
@@ -51,15 +51,11 @@ public class SyncEducationController : ControllerBase
         {
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             WriteIndented = true
-        };
-        
+        }; 
         await JsonSerializer.SerializeAsync(createStream, globalArray, options);
         */
-
         // Если запрос пустой
-        return globalArray.ArrayStudent.ToList().Count == 0
-           ? new BadRequestResult()
-           : await client.PostAsyncByToken<ArrayStudents>(@"/api/sync/cont/students", token, globalArray);
+        return globalArray.ArrayStudent;
     }
 
     [Route("")]

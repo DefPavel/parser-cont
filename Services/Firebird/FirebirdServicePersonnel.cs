@@ -600,7 +600,7 @@ public static class FirebirdServicePersonnel
             var sql =
                 $"select first {first} skip {skip} distinct s.id, td.name,  sdd.doc , sdd.name  from sotr s   inner join sotr_doljn sd on s.id = sd.sotr_id  inner join sotr_document sdd on s.id = sdd.sotr_id  inner join typ_sotr_doc td on sdd.typ = td.id " +
                 // $" where sd.dolj_id = 0 " +
-                $" where sd.dolj_id <> 0 " +
+                $" where sd.SOTR_ID = 5454 " +
                 $" and sdd.name is not null and sdd.doc is not null  order by s.id desc ";
 
             await using FbConnection connection = new(StringConnection);
