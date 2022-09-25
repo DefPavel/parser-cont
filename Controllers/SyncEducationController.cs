@@ -31,31 +31,19 @@ public class SyncEducationController : ControllerBase
 
     [Route("")]
     [HttpPost]
-    public async Task<IEnumerable<Students>> StudentByIdGroup(string idGroup)
+    public async Task<ArrayStudents> StudentByIdGroup(string idGroup)
     {
-        using ClientApi client = new(Hosting);
+        // using ClientApi client = new(Hosting);
         Stopwatch stopWatch = new();
         stopWatch.Start();
         ArrayStudents globalArray = new()
         {
             ArrayStudent = await FirebirdService.GetStudentByGroup(idGroup)
-        };
+        }; 
         stopWatch.Stop();
         var ts = stopWatch.Elapsed;
         _logger.LogInformation(message: $"(Затраченно времени на коллекцию Студентов idGroup={idGroup}) : (Часов:{ts.Hours};Минут:{ts.Minutes};Секунд:{ts.Seconds};)");
-        // Сформировать json файл
-        /*await using var createStream = System.IO.File.Create(@"students.json");
-        // Сериализация в UTF-8
-        Console.OutputEncoding = Encoding.UTF8;
-        JsonSerializerOptions options = new()
-        {
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            WriteIndented = true
-        }; 
-        await JsonSerializer.SerializeAsync(createStream, globalArray, options);
-        */
-        // Если запрос пустой
-        return globalArray.ArrayStudent;
+        return globalArray;
     }
 
     [Route("")]
@@ -128,6 +116,22 @@ public class SyncEducationController : ControllerBase
            ? new BadRequestResult()
            : await client.PostAsyncByToken<ArrayMarks>(@"/api/sync/cont/marksToGroup", token, globalArray);
     }
+    
+    [Route("")]
+    [HttpPost]
+    public async Task<NewArrayMarks> MarksByStudent(int idStudentGroup)
+    {
+        var arrayMarks = await FirebirdService.GetNewMarks(idStudentGroup);
+        var newMarksEnumerable = arrayMarks as NewMarks[] ?? arrayMarks.ToArray();
+        
+        NewArrayMarks globalArray = new()
+        {
+            IdStudent = newMarksEnumerable.FirstOrDefault()!.IdStudent,
+            ArrayMarks = newMarksEnumerable
+        };
+        return globalArray;
+    }
+    
     [Route("")]
     [HttpPost]
     public async Task<ActionResult<ArrayMarks>> StudentMarksByFaculty(string token , int idDepartment , int idForm , int idLevel , int course)

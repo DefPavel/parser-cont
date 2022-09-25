@@ -84,6 +84,53 @@ public static class FirebirdService
         await reader.CloseAsync();
 
         return list;
+        
+    }
+    
+    public static async Task<IEnumerable<NewMarks>> GetNewMarks(int idStudentGroup)
+    {
+        var list = new List<NewMarks>();
+        var sql =
+            "select distinct up.name, up.semestr , up.typ , o.ball, o.ocenka, o.ocenka_ects , s.id " +
+            "from student s " +
+            "inner join stud_gruppa sg on s.id = sg.stud_id " +
+            "inner join ocenky o on o.stud_id = s.id " +
+            "inner join uch_plan up on up.id = o.up_id " +
+            "where sg.id = " + idStudentGroup;
+
+        await using FbConnection connection = new(StringConnection);
+        connection.Open();
+        await using var transaction = await connection.BeginTransactionAsync();
+        await using FbCommand command = new(sql, connection, transaction);
+        var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            string marks;
+            if (reader.GetString(2).Trim() == "Z")
+            {
+                if (reader.GetString(4) == "2" || reader.GetString(4) == "0")
+                    marks = "0";
+                else
+                    marks = "1";
+            }
+            else
+                marks = reader.GetString(4);
+
+            list.Add(new NewMarks
+            {
+                SubjectName = reader["name"] != DBNull.Value ? reader.GetString(0).Trim() : "не указано",
+                Semester = reader["semestr"] != DBNull.Value ? reader.GetString(1) : "0",
+                FormControl = ReplaceOckenka(reader.GetString(2)),
+                Mark = reader["ball"] != DBNull.Value ? reader.GetInt32(3) : 0,
+                Mark5 = int.Parse(marks),
+                MarkEcts = reader.GetString(5).Trim(),
+                IdStudent = reader["id"] != DBNull.Value ? reader.GetInt32(6) : 0,
+            });
+        }
+
+        await reader.CloseAsync();
+
+        return list;
     }
     public static async Task<IEnumerable<Plan>> GetPlan(int idStudent)
     {
