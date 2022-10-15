@@ -126,7 +126,7 @@ public class SyncEducationController : ControllerBase
         
         NewArrayMarks globalArray = new()
         {
-            IdStudent = newMarksEnumerable.FirstOrDefault()!.IdStudent,
+            IdStudent = newMarksEnumerable.Any() ? newMarksEnumerable.FirstOrDefault()!.IdStudent : 0,
             ArrayMarks = newMarksEnumerable
         };
         return globalArray;
