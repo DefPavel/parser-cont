@@ -121,6 +121,7 @@ public static class FirebirdService
                 SubjectName = reader["name"] != DBNull.Value ? reader.GetString(0).Trim() : "не указано",
                 Semester = reader["semestr"] != DBNull.Value ? reader.GetString(1) : "0",
                 FormControl = ReplaceOckenka(reader.GetString(2)),
+                typeControl = reader["typ"] != DBNull.Value ? reader.GetString(2) : "",
                 Mark = reader["ball"] != DBNull.Value ? reader.GetInt32(3) : 0,
                 Mark5 = int.Parse(marks),
                 MarkEcts = reader.GetString(5).Trim(),

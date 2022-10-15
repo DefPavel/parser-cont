@@ -21,4 +21,6 @@ public class NewMarks
     public string MarkEcts { get; set; } = string.Empty;
     [JsonIgnore]
     public int IdStudent { get; set; }
+
+    public string typeControl { get; set; } = string.Empty;
 }
