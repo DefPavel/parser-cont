@@ -1,6 +1,6 @@
 ﻿namespace parser_cont.Models.Education;
 
-public class NewMarks
+public class ArrayMarsByGroups
 {
     [JsonPropertyName("subject")]
     public string SubjectName { get; set; } = string.Empty;
@@ -21,13 +21,7 @@ public class NewMarks
     public string MarkEcts { get; set; } = string.Empty;
 
     [JsonIgnore] public string FirstName { get; set; } = string.Empty;
-    [JsonIgnore] public string MiddleName { get; set; } = string.Empty;
-    [JsonIgnore] public string LastName { get; set; } = string.Empty;
-    
-    [JsonIgnore] public string NickFacult { get; set; } = string.Empty;
-    [JsonIgnore] public string NickLevel { get; set; } = string.Empty;
-    [JsonIgnore] public int Course { get; set; }
-    [JsonIgnore] public int IdStudent { get; set; }
+    [JsonPropertyName("idStudent")] public int IdStudent { get; set; }
 
     public string typeControl { get; set; } = string.Empty;
 }

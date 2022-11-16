@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.Encodings.Web;
 
 namespace parser_cont.Controllers;
 
@@ -130,6 +131,48 @@ public class SyncEducationController : ControllerBase
             ArrayMarks = newMarksEnumerable
         };
         return globalArray;
+    }
+    
+    [Route("")]
+    [HttpPost]
+    public async Task<ActionResult> NewMarksByStudentsGroup(int idGroup)
+    {
+        if (!Directory.Exists("jsonFiles"))
+        {
+            Directory.CreateDirectory("jsonFiles");
+        }
+        var arrayMarks = await FirebirdService.GetNewMarksGroup(idGroup);
+        var newMarksEnumerable = arrayMarks as NewMarks[] ?? arrayMarks.ToArray();
+        
+        foreach (var item in newMarksEnumerable)
+        {
+            var directory = $"jsonFiles\\{item.NickFacult}_{item.NickLevel}_{item.Course}";
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+            await using var createStream =
+                System.IO.File.Create(directory + $"\\{item.FirstName} {item.MiddleName} {item.LastName}.json");
+
+            var orderByMarksByStudent = newMarksEnumerable.Where(x => x.IdStudent == item.IdStudent);
+            
+            NewArrayMarks globalArray = new()
+            {
+                IdStudent = item.IdStudent,
+                ArrayMarks = orderByMarksByStudent
+            };
+
+            // Сериализация в UTF-8
+            Console.OutputEncoding = Encoding.UTF8;
+            JsonSerializerOptions options = new()
+            {
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                WriteIndented = true
+            };
+            await JsonSerializer.SerializeAsync(createStream, globalArray, options);    
+        }
+        
+        return Ok();
     }
     
     [Route("")]
